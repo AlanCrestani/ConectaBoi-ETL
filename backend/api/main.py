@@ -640,8 +640,9 @@ async def process_etl_simple(request: ETLProcessRequest):
         df = etl._load_and_prepare_dataframe(str(file_path), skip_first_line=True)
         
         # Se temos mappings, usar a lógica completa do ETL
-        if request.mappings:
+        if request.mappings and len(request.mappings) > 0:
             logger.info(f"Aplicando {len(request.mappings)} mapeamentos de coluna")
+            logger.info(f"Colunas originais do DataFrame: {list(df.columns)}")
             
             # Converter mappings para formato esperado pelo ETL
             column_mapping = []
@@ -649,19 +650,31 @@ async def process_etl_simple(request: ETLProcessRequest):
                 # Aplicar transformações específicas primeiro se existirem
                 if mapping.get('type') == 'derived' and mapping.get('transformations'):
                     csv_col = mapping.get('derivedFrom', mapping.get('csvColumn', ''))
-                    for old_val, new_val in mapping['transformations'].items():
-                        if csv_col in df.columns:
+                    if csv_col and csv_col in df.columns:
+                        logger.info(f"Aplicando transformações derivadas na coluna '{csv_col}'")
+                        for old_val, new_val in mapping['transformations'].items():
                             df[csv_col] = df[csv_col].replace(old_val, new_val)
+                            logger.debug(f"  {old_val} → {new_val}")
                 
-                column_mapping.append({
-                    'csv_column': mapping.get('csvColumn', ''),
-                    'db_column': mapping.get('sqlColumn', ''),
-                    'enabled': True,
-                    'data_type': 'TEXT'
-                })
+                # Adicionar ao mapeamento no formato correto
+                csv_column = mapping.get('csvColumn', '')
+                sql_column = mapping.get('sqlColumn', '')
+                
+                if csv_column and sql_column:
+                    column_mapping.append({
+                        'csv_column': csv_column,    # Formato esperado pela função
+                        'db_column': sql_column,     # Formato esperado pela função  
+                        'enabled': True,
+                        'data_type': 'TEXT'
+                    })
+                    logger.debug(f"Mapeamento: '{csv_column}' → '{sql_column}'")
+            
+            logger.info(f"Total de mapeamentos válidos: {len(column_mapping)}")
             
             # Aplicar mapeamento de colunas usando a função do ETL
             df_result = etl._apply_column_mapping_transformations(df, column_mapping)
+            
+            logger.info(f"Colunas após mapeamento: {list(df_result.columns)}")
             
         else:
             # Fallback: lógica simples original
