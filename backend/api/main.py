@@ -7,7 +7,7 @@ from fastapi import FastAPI, UploadFile, File, HTTPException, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 import sys
 import os
 import logging
@@ -98,7 +98,7 @@ app = FastAPI(
 # Configuração CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:5173", "http://localhost:8082", "http://localhost:8083"],
+    allow_origins=["http://localhost:3000", "http://localhost:5173", "http://localhost:8082", "http://localhost:8083", "http://localhost:8084"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -606,6 +606,110 @@ async def get_table_schema(table_name: str):
     except Exception as e:
         logger.error(f"Erro ao obter schema da tabela {table_name}: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+class ETLProcessRequest(BaseModel):
+    """Modelo para processamento ETL simplificado"""
+    file_id: str
+    transformations: dict[str, str]
+    excluded_columns: list[str]
+    excluded_rows: list[int] = []
+
+class SupabaseUploadRequest(BaseModel):
+    """Modelo para upload direto ao Supabase"""
+    file_id: str
+    table_name: str
+    data: list[dict[str, Any]]
+
+@app.post("/etl/process-quick")
+async def process_etl_simple(request: ETLProcessRequest):
+    """
+    Processa arquivo com transformações simples para Quick ETL
+    """
+    try:
+        logger.info(f"Processando ETL simples para arquivo: {request.file_id}")
+        
+        file_path = Path("../../data/temp") / request.file_id
+        
+        if not file_path.exists():
+            raise HTTPException(status_code=404, detail=f"Arquivo {request.file_id} não encontrado")
+        
+        etl = get_etl_instance()
+        
+        # Carregar dados
+        df = etl._load_and_prepare_dataframe(str(file_path), skip_first_line=True)
+        
+        # Aplicar transformações
+        for old_value, new_value in request.transformations.items():
+            df = df.replace(old_value, new_value)
+        
+        # Remover colunas excluídas
+        if request.excluded_columns:
+            existing_excluded_columns = [col for col in request.excluded_columns if col in df.columns]
+            if existing_excluded_columns:
+                df = df.drop(columns=existing_excluded_columns)
+        
+        # Remover linhas excluídas
+        if request.excluded_rows:
+            df = df.drop(index=request.excluded_rows, errors='ignore')
+        
+        # Converter para lista de dicionários
+        data = df.to_dict('records')
+        
+        logger.info(f"ETL simples concluído: {len(data)} registros processados")
+        
+        return {
+            "status": "success",
+            "data": data,
+            "message": f"Processamento concluído: {len(data)} registros",
+            "summary": {
+                "total_records": len(data),
+                "transformations_applied": len(request.transformations),
+                "columns_removed": len(request.excluded_columns),
+                "rows_removed": len(request.excluded_rows)
+            }
+        }
+        
+    except Exception as e:
+        logger.error(f"Erro no ETL simples: {e}")
+        raise HTTPException(status_code=500, detail=f"Erro no processamento: {str(e)}")
+
+@app.post("/supabase/upload")
+async def upload_to_supabase(request: SupabaseUploadRequest):
+    """
+    Faz upload de dados processados diretamente para uma tabela do Supabase
+    """
+    try:
+        etl = get_etl_instance()
+        
+        if not etl.supabase:
+            raise HTTPException(status_code=503, detail="Supabase não configurado")
+        
+        if not request.data:
+            raise HTTPException(status_code=400, detail="Nenhum dado fornecido para upload")
+        
+        logger.info(f"Iniciando upload para Supabase - Tabela: {request.table_name}, Registros: {len(request.data)}")
+        
+        # Inserir dados na tabela
+        result = etl.supabase.table(request.table_name).insert(request.data).execute()
+        
+        if hasattr(result, 'data') and result.data:
+            records_inserted = len(result.data)
+        else:
+            records_inserted = len(request.data)  # Fallback
+        
+        logger.info(f"Upload concluído: {records_inserted} registros inseridos em {request.table_name}")
+        
+        return {
+            "status": "success",
+            "message": f"Upload concluído com sucesso",
+            "table_name": request.table_name,
+            "records_inserted": records_inserted,
+            "file_id": request.file_id
+        }
+        
+    except Exception as e:
+        logger.error(f"Erro no upload para Supabase: {e}")
+        raise HTTPException(status_code=500, detail=f"Erro no upload: {str(e)}")
 
 class SaveScriptRequest(BaseModel):
     """Modelo para salvar script Python"""
