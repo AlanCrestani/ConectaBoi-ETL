@@ -118,11 +118,13 @@ export function QuickETL({ savedConfig }: QuickETLProps) {
       // 2. Aplicar configurações ETL
       const etlConfig = {
         file_id: uploadResult.file_id,
-        transformations: savedConfig.transformations,
-        excluded_columns: savedConfig.removedColumns,
+        transformations: savedConfig.transformations || {},
+        excluded_columns: savedConfig.removedColumns || [],
         excluded_rows: [],
-        mappings: savedConfig.mappings, // Adiciona os mappings
+        mappings: savedConfig.mappings || [], // Adiciona os mappings com fallback
       };
+
+      console.log("🔍 Debug ETL Config:", etlConfig);
 
       const etlResponse = await fetch(
         "http://localhost:8000/etl/process-quick",

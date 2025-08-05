@@ -676,6 +676,15 @@ async def process_etl_simple(request: ETLProcessRequest):
             
             logger.info(f"Colunas após mapeamento: {list(df_result.columns)}")
             
+            # Remover colunas de controle ETL que têm defaults no Supabase
+            columns_to_remove = ['batch_id', 'uploaded_at', 'processed', 'created_at', 'id']
+            for col in columns_to_remove:
+                if col in df_result.columns:
+                    df_result = df_result.drop(columns=[col])
+                    logger.info(f"Removida coluna de controle: {col}")
+            
+            logger.info(f"Colunas finais para Supabase: {list(df_result.columns)}")
+            
         else:
             # Fallback: lógica simples original
             logger.info("Nenhum mapeamento fornecido, usando transformações simples")

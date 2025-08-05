@@ -451,7 +451,7 @@ const ETLConfigStep3 = ({
   }) => {
     setSelectedConfig({
       ...config,
-      mappings: mappings // Adiciona os mappings atuais
+      mappings: mappings, // Adiciona os mappings atuais
     });
     toast({
       title: "Configuração Carregada",

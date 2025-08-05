@@ -5,21 +5,23 @@
 O **Quick ETL** estava usando os **nomes das colunas do arquivo original** ao invés dos **nomes mapeados** configurados na segunda tela do ETL.
 
 ### Exemplo do Problema:
+
 - **Arquivo CSV**: Coluna "CURRAL"
-- **Mapeamento (Tela 2)**: "CURRAL" → "id_curral" 
+- **Mapeamento (Tela 2)**: "CURRAL" → "id_curral"
 - **Quick ETL (ANTES)**: Enviava "CURRAL" ❌
 - **Quick ETL (DEPOIS)**: Envia "id_curral" ✅
 
 ## ✅ Solução Implementada
 
 ### 1. **Frontend: ETLConfigStep3.tsx**
+
 ```typescript
 // ANTES: selectedConfig não tinha mappings
 const [selectedConfig, setSelectedConfig] = useState<{
   transformations: Record<string, string>;
   removedColumns: string[];
   // ... outros campos
-}>
+}>;
 
 // DEPOIS: selectedConfig inclui mappings
 const [selectedConfig, setSelectedConfig] = useState<{
@@ -27,10 +29,11 @@ const [selectedConfig, setSelectedConfig] = useState<{
   removedColumns: string[];
   mappings: ColumnMapping[]; // ✅ Adicionado
   // ... outros campos
-}>
+}>;
 ```
 
 ### 2. **Frontend: QuickETL.tsx**
+
 ```typescript
 // Agora envia mappings para o backend
 const etlConfig = {
@@ -43,6 +46,7 @@ const etlConfig = {
 ```
 
 ### 3. **Backend: main.py**
+
 ```python
 class ETLProcessRequest(BaseModel):
     file_id: str
@@ -64,12 +68,14 @@ async def process_etl_simple(request: ETLProcessRequest):
 ## 🔄 Fluxo Corrigido
 
 ### Antes (❌ Problema):
+
 1. Carrega arquivo CSV
 2. Aplica transformações simples
 3. **Mantém nomes de colunas originais**
 4. Envia para Supabase com nomes errados
 
 ### Depois (✅ Correto):
+
 1. Carrega arquivo CSV
 2. **Aplica transformações derivadas** (ENF01 → 76)
 3. **Aplica mapeamento de colunas** (CURRAL → id_curral)
@@ -79,12 +85,14 @@ async def process_etl_simple(request: ETLProcessRequest):
 ## 🎯 Impacto
 
 ### ✅ **Quick ETL agora:**
+
 - Usa os **mesmos mappings** configurados no ETL normal
 - Aplica **transformações derivadas** corretamente (ENF01 → 76)
 - Envia dados com **nomes de colunas SQL** corretos
 - Mantém **compatibilidade total** com a configuração salva
 
 ### 🔧 **Funcionalidades preservadas:**
+
 - Sistema de exclusão de linhas
 - Transformações de valores
 - Remoção de colunas
@@ -98,12 +106,13 @@ async def process_etl_simple(request: ETLProcessRequest):
 4. **Verifique** se os dados chegam no Supabase com colunas corretas
 
 ### Exemplo de Teste:
+
 ```
 CSV: CURRAL | CONSUMO | ENF01
      123    | 45.5    | ENF01
 
 Mapeamento:
-- CURRAL → id_curral  
+- CURRAL → id_curral
 - CONSUMO → consumo_kg
 - ENF01 (derivado) → sexo (ENF01 → M)
 

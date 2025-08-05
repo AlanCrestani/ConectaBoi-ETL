@@ -1446,30 +1446,15 @@ class ConectaBoiETL:
     def _add_etl_control_columns(self, df: pd.DataFrame) -> pd.DataFrame:
         """
         Adiciona colunas de controle ETL padrão
+        NOTA: Para Supabase, não adicionar colunas que têm defaults (batch_id, uploaded_at, processed)
         """
         try:
-            # Gera ID único para este batch
-            batch_id = f"batch_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
-            current_time = datetime.now()
-            
-            # Adiciona colunas de controle se não existirem
-            if 'batch_id' not in df.columns:
-                df['batch_id'] = batch_id
-            
-            if 'uploaded_at' not in df.columns:
-                df['uploaded_at'] = current_time
-            
-            if 'processed' not in df.columns:
-                df['processed'] = False
-            
-            if 'created_at' not in df.columns:
-                df['created_at'] = current_time
-            
-            logger.info(f"📝 Colunas de controle ETL adicionadas (batch_id: {batch_id})")
+            # Para compatibilidade, apenas adiciona colunas que não conflitam com Supabase
+            logger.info(f"📝 Mantendo dados sem colunas de controle conflitantes")
             return df
             
         except Exception as e:
-            logger.warning(f"⚠️ Erro ao adicionar colunas de controle: {e}")
+            logger.warning(f"⚠️ Erro ao processar colunas de controle: {e}")
             return df
     
     def _validate_transformed_data(self, df: pd.DataFrame) -> Dict[str, Any]:
