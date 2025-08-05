@@ -172,7 +172,7 @@ export function QuickETL({ savedConfig }: QuickETLProps) {
           },
           body: JSON.stringify({
             file_id: selectedFile?.name || "quick_etl",
-            table_name: "conectaboi_historico_consumo",
+            table_name: "etl_staging_01_historico_consumo",
             data: finalData,
           }),
         }
@@ -188,7 +188,7 @@ export function QuickETL({ savedConfig }: QuickETLProps) {
       setResultMessage(
         `✅ Upload concluído! ${
           supabaseResult.records_inserted || finalData.length
-        } registros inseridos na tabela conectaboi_historico_consumo.`
+        } registros inseridos na tabela etl_staging_01_historico_consumo.`
       );
     } catch (error) {
       console.error("Erro no upload para Supabase:", error);
