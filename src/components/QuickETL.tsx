@@ -28,6 +28,7 @@ import {
   Play,
   CheckCircle,
   AlertCircle,
+  AlertTriangle,
   FileSpreadsheet,
   Database,
   Zap,
@@ -116,16 +117,29 @@ export function QuickETL({ savedConfig }: QuickETLProps) {
       setProgress(40);
 
       // 2. Aplicar configurações ETL
+      const mappings = savedConfig.mappings || [];
+
+      // ✅ VERIFICAÇÃO: Alertar se não há mappings válidos
+      if (!mappings || mappings.length === 0) {
+        console.warn(
+          "⚠️ AVISO: Nenhum mapping encontrado na configuração salva. Isso pode resultar em 0 registros processados."
+        );
+        console.warn(
+          "💡 DICA: Configure os mappings na Etapa 2 antes de usar o Quick ETL."
+        );
+      }
+
       const etlConfig = {
         file_id: uploadResult.file_id,
         transformations: savedConfig.transformations || {},
         excluded_columns: savedConfig.removedColumns || [],
         excluded_rows: [],
-        mappings: savedConfig.mappings || [], // Adiciona os mappings com fallback
-        skip_first_line: false, // Não pular primeira linha por padrão
+        mappings: mappings,
+        skip_first_line: true, // ✅ CORREÇÃO: Pular primeira linha para usar cabeçalhos reais do CSV
       };
 
       console.log("🔍 Debug ETL Config:", etlConfig);
+      console.log("📊 Mappings count:", mappings.length);
 
       const etlResponse = await fetch(
         "http://localhost:8000/etl/process-quick",
@@ -287,6 +301,19 @@ export function QuickETL({ savedConfig }: QuickETLProps) {
       .map(([oldValue, newValue]) => `        '${oldValue}': '${newValue}'`)
       .join(",\n");
 
+    // ✅ Gerar configuração de mappings com validação de curral
+    const mappingsCode = savedConfig.mappings
+      .map((mapping) => {
+        const validateCurral = mapping.validateInDimCurral ? "True" : "False";
+        return `        {
+            'csvColumn': '${mapping.csvColumn}',
+            'sqlColumn': '${mapping.sqlColumn}',
+            'type': '${mapping.type}',
+            'validateInDimCurral': ${validateCurral}
+        }`;
+      })
+      .join(",\n");
+
     return `#!/usr/bin/env python3
 """
 Script ETL ConectaBoi - ${scriptName || "Histórico Consumo"}
@@ -294,70 +321,138 @@ ${scriptDescription ? `Descrição: ${scriptDescription}` : ""}
 Gerado automaticamente em: ${new Date().toLocaleDateString("pt-BR")}
 """
 
-import sys
+import pandas as pd
+import json
+import logging
+from datetime import datetime
+from supabase import create_client, Client
 import os
-from pathlib import Path
 
-# Adicionar diretório backend ao path
-backend_dir = Path(__file__).parent.parent / "backend"
-sys.path.append(str(backend_dir))
+# Configuração de logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
-from etl.conectaboi_etl_smart import ConectaBoiETL
+# Configuração Supabase
+SUPABASE_URL = os.getenv('SUPABASE_URL')
+SUPABASE_KEY = os.getenv('SUPABASE_KEY')
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-def main():
-    """Executa o processo ETL completo"""
+def validate_curral(df, curral_column):
+    """Valida se currais existem na dim_curral"""
+    try:
+        # Busca todos os currais válidos
+        response = supabase.table('dim_curral').select('id, nome').execute()
+        valid_currals = {row['nome']: row['id'] for row in response.data}
+        
+        # Valida e mapeia currais
+        df_validated = df.copy()
+        invalid_currals = df_validated[~df_validated[curral_column].isin(valid_currals.keys())][curral_column].unique()
+        
+        if len(invalid_currals) > 0:
+            logger.warning(f"Currais não encontrados em dim_curral: {list(invalid_currals)}")
+            # Remove linhas com currais inválidos
+            df_validated = df_validated[df_validated[curral_column].isin(valid_currals.keys())]
+            
+        logger.info(f"Validação de currais: {len(df_validated)} registros válidos de {len(df)} originais")
+        return df_validated
+        
+    except Exception as e:
+        logger.error(f"Erro na validação de currais: {e}")
+        return df
+
+def transform_data(df):
+    """Aplica transformações nos dados"""
+    logger.info("Iniciando transformação dos dados...")
     
     # Configurações
     transformations = {
 ${transformationsCode}
     }
     
-    removed_columns = ${JSON.stringify(savedConfig.removedColumns)}
+    mappings = [
+${mappingsCode}
+    ]
     
-    # Inicializar ETL
-    etl = ConectaBoiETL()
+    # Aplicar transformações de valores
+    for old_value, new_value in transformations.items():
+        df = df.replace(old_value, new_value)
     
-    print("🚀 Iniciando processo ETL...")
+    # Aplicar mapeamentos e validações
+    result_df = pd.DataFrame()
     
-    # Solicitar arquivo de entrada
-    input_file = input("Digite o caminho do arquivo CSV/XLSX: ").strip()
-    if not os.path.exists(input_file):
-        print(f"❌ Arquivo não encontrado: {input_file}")
-        return
+    for mapping in mappings:
+        csv_col = mapping['csvColumn']
+        sql_col = mapping['sqlColumn']
+        
+        if csv_col in df.columns:
+            result_df[sql_col] = df[csv_col]
+            
+            # ✅ Validação de curral se necessário
+            if mapping.get('validateInDimCurral') and 'curral' in sql_col.lower():
+                logger.info(f"Validando coluna '{sql_col}' contra dim_curral")
+                result_df = validate_curral(result_df, sql_col)
+        else:
+            logger.warning(f"Coluna {csv_col} não encontrada no CSV")
     
+    logger.info(f"Dados transformados: {len(result_df)} linhas")
+    return result_df
+
+def load_to_staging(df, table_name):
+    """Carrega dados para tabela staging"""
     try:
-        # Processar arquivo
-        print("📊 Processando dados...")
-        result = etl.process_file(
-            file_path=input_file,
-            transformations=transformations,
-            excluded_columns=removed_columns,
-            excluded_rows=[]
-        )
+        # Converter DataFrame para lista de dicionários
+        records = df.to_dict('records')
         
-        print(f"✅ Processamento concluído!")
-        print(f"📈 Registros processados: {len(result.get('data', []))}")
+        # Inserir no Supabase
+        response = supabase.table(table_name).insert(records).execute()
         
-        # Upload para Supabase
-        upload_choice = input("Fazer upload para Supabase? (s/n): ").strip().lower()
-        if upload_choice in ['s', 'sim', 'y', 'yes']:
-            print("☁️ Fazendo upload para Supabase...")
-            upload_result = etl.upload_to_supabase(
-                table_name="conectaboi_historico_consumo",
-                data=result['data']
-            )
-            print(f"🎯 Upload concluído! {upload_result.get('records_inserted', 0)} registros inseridos.")
-        
-        print("🏆 Processo ETL finalizado com sucesso!")
-        
+        if response.data:
+            logger.info(f"Dados carregados com sucesso: {len(response.data)} registros")
+            return True
+        else:
+            logger.error("Erro ao carregar dados")
+            return False
+            
     except Exception as e:
-        print(f"❌ Erro durante o processo ETL: {e}")
-        return 1
-    
-    return 0
+        logger.error(f"Erro no carregamento: {e}")
+        return False
+
+def main():
+    """Função principal do ETL"""
+    try:
+        logger.info("Iniciando ETL - ${scriptName || "Processo ConectaBoi"}")
+        
+        # Solicitar arquivo de entrada
+        input_file = input("Digite o caminho do arquivo CSV: ").strip()
+        if not os.path.exists(input_file):
+            print(f"❌ Arquivo não encontrado: {input_file}")
+            return False
+        
+        # Carregar CSV
+        df = pd.read_csv(input_file, encoding='windows-1252', delimiter=';')
+        logger.info(f"CSV carregado: {len(df)} linhas")
+        
+        # Transformar dados
+        transformed_df = transform_data(df)
+        
+        # Solicitar tabela de destino
+        table_name = input("Digite o nome da tabela staging (ex: etl_staging_03_desvio_distribuicao): ").strip()
+        
+        # Carregar para staging
+        success = load_to_staging(transformed_df, table_name)
+        
+        if success:
+            logger.info("ETL concluído com sucesso!")
+        else:
+            logger.error("ETL falhou!")
+            return False
+            
+    except Exception as e:
+        logger.error(f"Erro geral no ETL: {e}")
+        return False
 
 if __name__ == "__main__":
-    exit(main())
+    main()
 `;
   };
 
@@ -414,6 +509,42 @@ if __name__ == "__main__":
             <p className="text-sm">
               Selecione uma configuração salva para usar o Quick ETL.
             </p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // ✅ VERIFICAÇÃO: Alertar se configuração não tem mappings
+  const hasMappings = savedConfig.mappings && savedConfig.mappings.length > 0;
+  if (!hasMappings) {
+    return (
+      <Card>
+        <CardContent className="pt-6">
+          <div className="text-center text-amber-600">
+            <AlertTriangle className="h-12 w-12 mx-auto mb-4" />
+            <p className="font-medium">Configuração Incompleta</p>
+            <p className="text-sm mt-2">
+              A configuração selecionada não possui mapeamentos de colunas.
+            </p>
+            <p className="text-sm mt-1">
+              Configure os mapeamentos na <strong>Etapa 2</strong> antes de usar
+              o Quick ETL.
+            </p>
+            <div className="mt-4 p-3 bg-amber-50 rounded-lg text-left">
+              <p className="text-xs font-medium">Configuração atual:</p>
+              <p className="text-xs">
+                • Arquivo: {savedConfig.originalFileName}
+              </p>
+              <p className="text-xs">
+                • Transformações:{" "}
+                {Object.keys(savedConfig.transformations).length}
+              </p>
+              <p className="text-xs">
+                • Colunas removidas: {savedConfig.removedColumns.length}
+              </p>
+              <p className="text-xs text-amber-700">• Mappings: 0 ❌</p>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -516,7 +647,7 @@ if __name__ == "__main__":
         )}
 
         {/* Tabela de Dados Processados */}
-        {status === "processed" && sortedData.length > 0 && (
+        {status === "processed" && (
           <div className="space-y-4">
             <Card>
               <CardHeader>
@@ -566,35 +697,58 @@ if __name__ == "__main__":
                       </tr>
                     </thead>
                     <tbody>
-                      {sortedData.map((row, displayIndex) => {
-                        const originalIndex = row.originalIndex as number;
+                      {sortedData.length > 0 ? (
+                        sortedData.map((row, displayIndex) => {
+                          const originalIndex = row.originalIndex as number;
 
-                        return (
-                          <tr
-                            key={originalIndex}
-                            className="border-b hover:bg-gray-50"
+                          return (
+                            <tr
+                              key={originalIndex}
+                              className="border-b hover:bg-gray-50"
+                            >
+                              <td className="px-2 py-1 border-r">
+                                <Checkbox
+                                  checked={false}
+                                  onCheckedChange={() =>
+                                    handleRowToggle(originalIndex)
+                                  }
+                                />
+                              </td>
+                              <td className="px-2 py-1 border-r font-mono text-xs">
+                                {originalIndex + 1}
+                              </td>
+                              {columns
+                                .filter((col) => col !== "originalIndex")
+                                .map((column) => (
+                                  <td
+                                    key={column}
+                                    className="px-2 py-1 border-r"
+                                  >
+                                    {String(row[column] || "")}
+                                  </td>
+                                ))}
+                            </tr>
+                          );
+                        })
+                      ) : (
+                        <tr>
+                          <td
+                            colSpan={columns.length + 2}
+                            className="px-4 py-8 text-center text-gray-500"
                           >
-                            <td className="px-2 py-1 border-r">
-                              <Checkbox
-                                checked={false}
-                                onCheckedChange={() =>
-                                  handleRowToggle(originalIndex)
-                                }
-                              />
-                            </td>
-                            <td className="px-2 py-1 border-r font-mono text-xs">
-                              {originalIndex + 1}
-                            </td>
-                            {columns
-                              .filter((col) => col !== "originalIndex")
-                              .map((column) => (
-                                <td key={column} className="px-2 py-1 border-r">
-                                  {String(row[column] || "")}
-                                </td>
-                              ))}
-                          </tr>
-                        );
-                      })}
+                            <div className="flex flex-col items-center">
+                              <AlertCircle className="h-8 w-8 mb-2 opacity-50" />
+                              <p className="font-medium">
+                                Nenhum dado processado
+                              </p>
+                              <p className="text-sm">
+                                Verifique se o arquivo foi carregado
+                                corretamente
+                              </p>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
                     </tbody>
                   </table>
                 </div>

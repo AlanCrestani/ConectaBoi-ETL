@@ -1,0 +1,61 @@
+{
+  "fileId": "01_historico_consumo",
+  "tableName": "etl_staging_01_historico_consumo",
+  "csvHeaders": [
+    "data",
+    "curral",
+    "animal_id",
+    "alimento",
+    "quantidade_kg",
+    "valor_rs"
+  ],
+  "mappings": [
+    {
+      "csvColumn": "data",
+      "sqlColumn": "data_trato",
+      "type": "direct",
+      "transformations": {},
+      "validateInDimCurral": false
+    },
+    {
+      "csvColumn": "curral",
+      "sqlColumn": "id_curral",
+      "type": "direct",
+      "transformations": {},
+      "validateInDimCurral": true
+    },
+    {
+      "csvColumn": "animal_id",
+      "sqlColumn": "id_animal",
+      "type": "direct",
+      "transformations": {},
+      "validateInDimCurral": false
+    },
+    {
+      "csvColumn": "alimento",
+      "sqlColumn": "alimento",
+      "type": "direct",
+      "transformations": {},
+      "validateInDimCurral": false
+    },
+    {
+      "csvColumn": "quantidade_kg",
+      "sqlColumn": "quantidade_kg",
+      "type": "direct",
+      "transformations": {},
+      "validateInDimCurral": false
+    },
+    {
+      "csvColumn": "valor_rs",
+      "sqlColumn": "valor_unitario",
+      "type": "direct",
+      "transformations": {},
+      "validateInDimCurral": false
+    }
+  ],
+  "excludedRows": [0],
+  "sqlSchema": "CREATE TABLE etl_staging_01_historico_consumo (\n  id SERIAL PRIMARY KEY,\n  data_trato DATE,\n  id_curral INTEGER,\n  id_animal INTEGER,\n  alimento TEXT,\n  quantidade_kg DECIMAL(10,3),\n  valor_unitario DECIMAL(10,2),\n  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP\n);",
+  "createdAt": "2025-08-05T15:30:00.000Z",
+  "description": "Configuração ETL para 01_historico_consumo",
+  "version": "1.0"
+}

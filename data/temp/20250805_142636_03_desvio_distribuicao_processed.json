@@ -1,0 +1,352 @@
+{
+  "csv_data": {
+    "headers": [
+      "data",
+      "hora",
+      "trato",
+      "tratador",
+      "col_4",
+      "vagão",
+      "curral",
+      "col_7",
+      "dieta",
+      "plano_alimentar",
+      "lote",
+      "distribuído_kg",
+      "previsto_kg",
+      "desvio_kg",
+      "desvio",
+      "status"
+    ],
+    "sample_rows": [
+      {
+        "data": "03/08/2025",
+        "hora": "07:23:43",
+        "trato": "Trato 1",
+        "tratador": "AGUSTIN LOPEZ",
+        "col_4": "",
+        "vagão": "BAHMAN",
+        "curral": "01",
+        "col_7": "",
+        "dieta": "TERMINACION SORG/MILHETO16/7/25",
+        "plano_alimentar": "20,00 %",
+        "lote": "01-G1-25",
+        "distribuído_kg": "95,00",
+        "previsto_kg": "119,00",
+        "desvio_kg": "-24,00",
+        "desvio": "-20,17 %",
+        "status": "PRETO"
+      },
+      {
+        "data": "03/08/2025",
+        "hora": "09:36:14",
+        "trato": "Trato 2",
+        "tratador": "AGUSTIN LOPEZ",
+        "col_4": "",
+        "vagão": "BAHMAN",
+        "curral": "01",
+        "col_7": "",
+        "dieta": "TERMINACION SORG/MILHETO16/7/25",
+        "plano_alimentar": "25,00 %",
+        "lote": "01-G1-25",
+        "distribuído_kg": "325,00",
+        "previsto_kg": "356,00",
+        "desvio_kg": "-31,00",
+        "desvio": "-8,71 %",
+        "status": "VERMELHO"
+      },
+      {
+        "data": "03/08/2025",
+        "hora": "12:47:30",
+        "trato": "Trato 3",
+        "tratador": "AGUSTIN LOPEZ",
+        "col_4": "",
+        "vagão": "BAHMAN",
+        "curral": "01",
+        "col_7": "",
+        "dieta": "TERMINACION SORG/MILHETO16/7/25",
+        "plano_alimentar": "25,00 %",
+        "lote": "01-G1-25",
+        "distribuído_kg": "330,00",
+        "previsto_kg": "370,00",
+        "desvio_kg": "-40,00",
+        "desvio": "-10,81 %",
+        "status": "PRETO"
+      },
+      {
+        "data": "03/08/2025",
+        "hora": "16:38:18",
+        "trato": "Trato 4",
+        "tratador": "AGUSTIN LOPEZ",
+        "col_4": "",
+        "vagão": "BAHMAN",
+        "curral": "01",
+        "col_7": "",
+        "dieta": "TERMINACION SORG/MILHETO16/7/25",
+        "plano_alimentar": "30,00 %",
+        "lote": "01-G1-25",
+        "distribuído_kg": "440,00",
+        "previsto_kg": "426,00",
+        "desvio_kg": "14,00",
+        "desvio": "3,29 %",
+        "status": "AMARELO"
+      },
+      {
+        "data": "03/08/2025",
+        "hora": "07:24:27",
+        "trato": "Trato 1",
+        "tratador": "AGUSTIN LOPEZ",
+        "col_4": "",
+        "vagão": "BAHMAN",
+        "curral": "02",
+        "col_7": "",
+        "dieta": "TERMINACION SORG/MILHETO16/7/25",
+        "plano_alimentar": "20,00 %",
+        "lote": "02-G2-25",
+        "distribuído_kg": "225,00",
+        "previsto_kg": "257,00",
+        "desvio_kg": "-32,00",
+        "desvio": "-12,45 %",
+        "status": "PRETO"
+      },
+      {
+        "data": "03/08/2025",
+        "hora": "09:36:44",
+        "trato": "Trato 2",
+        "tratador": "AGUSTIN LOPEZ",
+        "col_4": "",
+        "vagão": "BAHMAN",
+        "curral": "02",
+        "col_7": "",
+        "dieta": "TERMINACION SORG/MILHETO16/7/25",
+        "plano_alimentar": "25,00 %",
+        "lote": "02-G2-25",
+        "distribuído_kg": "405,00",
+        "previsto_kg": "325,00",
+        "desvio_kg": "80,00",
+        "desvio": "24,62 %",
+        "status": "PRETO"
+      },
+      {
+        "data": "03/08/2025",
+        "hora": "12:47:57",
+        "trato": "Trato 3",
+        "tratador": "AGUSTIN LOPEZ",
+        "col_4": "",
+        "vagão": "BAHMAN",
+        "curral": "02",
+        "col_7": "",
+        "dieta": "TERMINACION SORG/MILHETO16/7/25",
+        "plano_alimentar": "25,00 %",
+        "lote": "02-G2-25",
+        "distribuído_kg": "350,00",
+        "previsto_kg": "290,00",
+        "desvio_kg": "60,00",
+        "desvio": "20,69 %",
+        "status": "PRETO"
+      },
+      {
+        "data": "03/08/2025",
+        "hora": "16:38:48",
+        "trato": "Trato 4",
+        "tratador": "AGUSTIN LOPEZ",
+        "col_4": "",
+        "vagão": "BAHMAN",
+        "curral": "02",
+        "col_7": "",
+        "dieta": "TERMINACION SORG/MILHETO16/7/25",
+        "plano_alimentar": "30,00 %",
+        "lote": "02-G2-25",
+        "distribuído_kg": "295,00",
+        "previsto_kg": "295,00",
+        "desvio_kg": "0,00",
+        "desvio": "0,00 %",
+        "status": "VERDE"
+      },
+      {
+        "data": "03/08/2025",
+        "hora": "07:24:55",
+        "trato": "Trato 1",
+        "tratador": "AGUSTIN LOPEZ",
+        "col_4": "",
+        "vagão": "BAHMAN",
+        "curral": "03",
+        "col_7": "",
+        "dieta": "TERMINACION SORG/MILHETO16/7/25",
+        "plano_alimentar": "20,00 %",
+        "lote": "03-G1-25",
+        "distribuído_kg": "240,00",
+        "previsto_kg": "225,00",
+        "desvio_kg": "15,00",
+        "desvio": "6,67 %",
+        "status": "VERMELHO"
+      },
+      {
+        "data": "03/08/2025",
+        "hora": "09:37:09",
+        "trato": "Trato 2",
+        "tratador": "AGUSTIN LOPEZ",
+        "col_4": "",
+        "vagão": "BAHMAN",
+        "curral": "03",
+        "col_7": "",
+        "dieta": "TERMINACION SORG/MILHETO16/7/25",
+        "plano_alimentar": "25,00 %",
+        "lote": "03-G1-25",
+        "distribuído_kg": "220,00",
+        "previsto_kg": "271,00",
+        "desvio_kg": "-51,00",
+        "desvio": "-18,82 %",
+        "status": "PRETO"
+      }
+    ],
+    "total_rows": 8803,
+    "encoding_used": "utf-8",
+    "original_headers": [
+      "Unnamed: 0",
+      "Unnamed: 1",
+      "Unnamed: 2",
+      "Unnamed: 3",
+      "DESVIO DA DISTRIBUIÇÃO",
+      "Unnamed: 5",
+      "Unnamed: 6",
+      "Unnamed: 7",
+      "Unnamed: 8",
+      "Unnamed: 9",
+      "Unnamed: 10",
+      "Unnamed: 11",
+      "Unnamed: 12",
+      "Unnamed: 13",
+      "Unnamed: 14",
+      "Unnamed: 15"
+    ]
+  },
+  "table_schema": {
+    "table_name": "etl_staging_03_desvio_distribuicao",
+    "columns": [],
+    "create_table_sql": "-- Erro ao obter schema da tabela etl_staging_03_desvio_distribuicao: Impossível obter schema da tabela etl_staging_03_desvio_distribuicao. Verifique conectividade com Supabase.",
+    "column_count": 0,
+    "exists": false,
+    "error": "Impossível obter schema da tabela etl_staging_03_desvio_distribuicao. Verifique conectividade com Supabase."
+  },
+  "auto_mapping": [
+    {
+      "csv_column": "data",
+      "db_column": "data",
+      "confidence": 0.5,
+      "data_type": "DATE",
+      "suggested": false
+    },
+    {
+      "csv_column": "hora",
+      "db_column": "hora",
+      "confidence": 0.5,
+      "data_type": "DATE",
+      "suggested": false
+    },
+    {
+      "csv_column": "trato",
+      "db_column": "trato",
+      "confidence": 0.5,
+      "data_type": "TEXT",
+      "suggested": false
+    },
+    {
+      "csv_column": "tratador",
+      "db_column": "tratador",
+      "confidence": 0.5,
+      "data_type": "TEXT",
+      "suggested": false
+    },
+    {
+      "csv_column": "col_4",
+      "db_column": "col_4",
+      "confidence": 0.5,
+      "data_type": "TEXT",
+      "suggested": false
+    },
+    {
+      "csv_column": "vagão",
+      "db_column": "vagão",
+      "confidence": 0.5,
+      "data_type": "TEXT",
+      "suggested": false
+    },
+    {
+      "csv_column": "curral",
+      "db_column": "curral",
+      "confidence": 0.5,
+      "data_type": "TEXT",
+      "suggested": false
+    },
+    {
+      "csv_column": "col_7",
+      "db_column": "col_7",
+      "confidence": 0.5,
+      "data_type": "TEXT",
+      "suggested": false
+    },
+    {
+      "csv_column": "dieta",
+      "db_column": "dieta",
+      "confidence": 0.5,
+      "data_type": "TEXT",
+      "suggested": false
+    },
+    {
+      "csv_column": "plano_alimentar",
+      "db_column": "plano_alimentar",
+      "confidence": 0.5,
+      "data_type": "TEXT",
+      "suggested": false
+    },
+    {
+      "csv_column": "lote",
+      "db_column": "lote",
+      "confidence": 0.5,
+      "data_type": "TEXT",
+      "suggested": false
+    },
+    {
+      "csv_column": "distribuído_kg",
+      "db_column": "distribuído_kg",
+      "confidence": 0.5,
+      "data_type": "NUMERIC",
+      "suggested": false
+    },
+    {
+      "csv_column": "previsto_kg",
+      "db_column": "previsto_kg",
+      "confidence": 0.5,
+      "data_type": "NUMERIC",
+      "suggested": false
+    },
+    {
+      "csv_column": "desvio_kg",
+      "db_column": "desvio_kg",
+      "confidence": 0.5,
+      "data_type": "NUMERIC",
+      "suggested": false
+    },
+    {
+      "csv_column": "desvio",
+      "db_column": "desvio",
+      "confidence": 0.5,
+      "data_type": "TEXT",
+      "suggested": false
+    },
+    {
+      "csv_column": "status",
+      "db_column": "status",
+      "confidence": 0.5,
+      "data_type": "TEXT",
+      "suggested": false
+    }
+  ],
+  "processing_info": {
+    "skip_first_line_applied": true,
+    "selected_table": "etl_staging_03_desvio_distribuicao",
+    "processed_at": "2025-08-05T14:26:49.420723",
+    "file_path": "..\\..\\data\\temp\\20250805_142636_03_desvio_distribuicao.csv"
+  }
+}

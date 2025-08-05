@@ -215,6 +215,63 @@ async def health_check():
             content={"status": "unhealthy", "error": str(e)}
         )
 
+@app.get("/health/supabase")
+async def supabase_health_check():
+    """Verificação específica de conectividade com Supabase"""
+    try:
+        etl = get_etl_instance()
+        
+        if not etl.supabase:
+            return JSONResponse(
+                status_code=200,
+                content={
+                    "connected": False,
+                    "status": "not_configured",
+                    "message": "Supabase não configurado",
+                    "timestamp": datetime.now().isoformat()
+                }
+            )
+        
+        # Teste de conectividade real
+        try:
+            # Tentar uma operação simples que funciona se conectado
+            result = etl.supabase.table('etl_staging_01_historico_consumo').select('*').limit(1).execute()
+            
+            return JSONResponse(
+                status_code=200,
+                content={
+                    "connected": True,
+                    "status": "operational",
+                    "message": "Supabase conectado e operacional",
+                    "timestamp": datetime.now().isoformat(),
+                    "test_table": "etl_staging_01_historico_consumo"
+                }
+            )
+            
+        except Exception as supabase_error:
+            logger.warning(f"Supabase connection test failed: {supabase_error}")
+            return JSONResponse(
+                status_code=200,
+                content={
+                    "connected": False,
+                    "status": "connection_failed",
+                    "message": f"Falha na conexão: {str(supabase_error)}",
+                    "timestamp": datetime.now().isoformat()
+                }
+            )
+            
+    except Exception as e:
+        logger.error(f"Supabase health check failed: {e}")
+        return JSONResponse(
+            status_code=200,
+            content={
+                "connected": False,
+                "status": "error",
+                "message": f"Erro interno: {str(e)}",
+                "timestamp": datetime.now().isoformat()
+            }
+        )
+
 @app.post("/upload-csv")
 async def upload_csv(file: UploadFile = File(...)):
     """
@@ -688,7 +745,7 @@ class ETLProcessRequest(BaseModel):
     excluded_columns: list[str]
     excluded_rows: list[int] = []
     mappings: list[dict[str, Any]] = []
-    skip_first_line: bool = False  # Adicionar campo para controlar se deve pular primeira linha
+    skip_first_line: bool = True  # ✅ CORREÇÃO: Pular primeira linha por padrão para usar cabeçalhos reais
 
 class SupabaseUploadRequest(BaseModel):
     """Modelo para upload direto ao Supabase"""
@@ -703,6 +760,14 @@ async def process_etl_simple(request: ETLProcessRequest):
     """
     try:
         logger.info(f"Processando ETL simples para arquivo: {request.file_id}")
+        
+        # 🔍 DEBUG: Log detalhado da requisição
+        logger.info(f"🔍 DEBUG - Configuração da requisição:")
+        logger.info(f"  skip_first_line: {request.skip_first_line}")
+        logger.info(f"  mappings count: {len(request.mappings) if request.mappings else 0}")
+        if request.mappings:
+            for i, mapping in enumerate(request.mappings):
+                logger.info(f"  mapping[{i}]: csvColumn='{mapping.get('csvColumn')}' → sqlColumn='{mapping.get('sqlColumn')}' (type={mapping.get('type')})")
         
         file_path = Path("../../data/temp") / request.file_id
         
@@ -736,13 +801,23 @@ async def process_etl_simple(request: ETLProcessRequest):
                 sql_column = mapping.get('sqlColumn', '')
                 
                 if csv_column and sql_column:
+                    # ✅ CORREÇÃO: Limpar nome da coluna CSV para coincidir com DataFrame limpo
+                    csv_column_clean = etl._clean_column_name(csv_column.lower())
+                    
                     column_mapping.append({
-                        'csv_column': csv_column,    # Formato esperado pela função
-                        'db_column': sql_column,     # Formato esperado pela função  
+                        'csv_column': csv_column_clean,  # ✅ Usar nome limpo!
+                        'db_column': sql_column,         # Formato esperado pela função  
                         'enabled': True,
                         'data_type': 'TEXT'
                     })
-                    logger.debug(f"Mapeamento: '{csv_column}' → '{sql_column}'")
+                    logger.debug(f"Mapeamento: '{csv_column}' → '{csv_column_clean}' → '{sql_column}'")
+                    
+                    # Aplicar transformações específicas se existirem para este mapping
+                    if mapping.get('transformations') and csv_column_clean in df.columns:
+                        logger.info(f"Aplicando transformações específicas na coluna '{csv_column_clean}'")
+                        for old_val, new_val in mapping['transformations'].items():
+                            df[csv_column_clean] = df[csv_column_clean].replace(old_val, new_val)
+                            logger.debug(f"  {old_val} → {new_val}")
             
             logger.info(f"Total de mapeamentos válidos: {len(column_mapping)}")
             
@@ -750,6 +825,31 @@ async def process_etl_simple(request: ETLProcessRequest):
             df_result = etl._apply_column_mapping_transformations(df, column_mapping)
             
             logger.info(f"Colunas após mapeamento: {list(df_result.columns)}")
+            
+            # ✅ VALIDAÇÃO DE CURRAIS: Verificar se há mappings que precisam de validação com dim_curral
+            for mapping in request.mappings:
+                if mapping.get('validateInDimCurral') and mapping.get('sqlColumn'):
+                    sql_column = mapping.get('sqlColumn')
+                    if sql_column in df_result.columns:
+                        logger.info(f"🔍 Validando coluna '{sql_column}' contra dim_curral")
+                        
+                        # Obter valores únicos da coluna para validação
+                        unique_values = df_result[sql_column].dropna().unique().tolist()
+                        
+                        # Validar contra dim_curral
+                        validation_result = etl.validate_against_dimension_table(
+                            data_values=unique_values,
+                            dimension_table='dim_curral',
+                            lookup_column='nome'  # Assumindo que o campo é 'nome' na dim_curral
+                        )
+                        
+                        if validation_result.get('success') and validation_result.get('invalid_values'):
+                            invalid_currals = validation_result['invalid_values']
+                            logger.warning(f"⚠️ Currais inválidos encontrados: {invalid_currals}")
+                            
+                            # Opcional: Remover linhas com currais inválidos ou marcá-las
+                            # Por enquanto, apenas loggar o aviso
+                            logger.info(f"Total de registros com currais válidos mantidos: {len(df_result)}")
             
             # Remover colunas de controle ETL que têm defaults no Supabase
             columns_to_remove = ['batch_id', 'uploaded_at', 'processed', 'created_at', 'id']
@@ -965,6 +1065,44 @@ async def list_saved_scripts():
         
     except Exception as e:
         logger.error(f"Erro ao listar scripts: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.delete("/scripts/delete/{script_name}")
+async def delete_script(script_name: str):
+    """
+    Exclui um script salvo e todos os seus arquivos relacionados
+    """
+    try:
+        scripts_dir = Path("../../generated_scripts")
+        if not scripts_dir.exists():
+            raise HTTPException(status_code=404, detail="Pasta de scripts não encontrada")
+        
+        # Arquivos que serão removidos
+        files_to_remove = [
+            scripts_dir / f"{script_name}.py",
+            scripts_dir / f"{script_name}_config.json", 
+            scripts_dir / f"run_{script_name}.py"
+        ]
+        
+        removed_files = []
+        for file_path in files_to_remove:
+            if file_path.exists():
+                file_path.unlink()
+                removed_files.append(str(file_path.name))
+                logger.info(f"Arquivo removido: {file_path}")
+        
+        if not removed_files:
+            raise HTTPException(status_code=404, detail=f"Script '{script_name}' não encontrado")
+        
+        return {
+            "message": f"Script '{script_name}' excluído com sucesso",
+            "removed_files": removed_files
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Erro ao excluir script {script_name}: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":

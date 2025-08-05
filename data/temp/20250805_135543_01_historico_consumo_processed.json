@@ -1175,40 +1175,179 @@
       {
         "column_name": "id",
         "data_type": "integer",
-        "is_nullable": "NO",
+        "is_nullable": "YES",
         "ordinal_position": 1
       },
       {
-        "column_name": "created_at",
-        "data_type": "timestamp",
+        "column_name": "id_curral",
+        "data_type": "varchar(255)",
         "is_nullable": "YES",
         "ordinal_position": 2
       },
       {
-        "column_name": "data_column_1",
-        "data_type": "text",
+        "column_name": "lote",
+        "data_type": "varchar(255)",
         "is_nullable": "YES",
         "ordinal_position": 3
       },
       {
-        "column_name": "data_column_2",
-        "data_type": "text",
+        "column_name": "data",
+        "data_type": "varchar(255)",
         "is_nullable": "YES",
         "ordinal_position": 4
       },
       {
-        "column_name": "data_column_3",
-        "data_type": "text",
+        "column_name": "qtd_animais",
+        "data_type": "integer",
         "is_nullable": "YES",
         "ordinal_position": 5
+      },
+      {
+        "column_name": "dias_confinamento",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "ordinal_position": 6
+      },
+      {
+        "column_name": "data_entrada",
+        "data_type": "varchar(255)",
+        "is_nullable": "YES",
+        "ordinal_position": 7
+      },
+      {
+        "column_name": "leitura_cocho",
+        "data_type": "varchar(255)",
+        "is_nullable": "YES",
+        "ordinal_position": 8
+      },
+      {
+        "column_name": "ajuste_kg",
+        "data_type": "numeric",
+        "is_nullable": "YES",
+        "ordinal_position": 9
+      },
+      {
+        "column_name": "leitura_noturna",
+        "data_type": "varchar(255)",
+        "is_nullable": "YES",
+        "ordinal_position": 10
+      },
+      {
+        "column_name": "sexo",
+        "data_type": "varchar(255)",
+        "is_nullable": "YES",
+        "ordinal_position": 11
+      },
+      {
+        "column_name": "grupo_genetico",
+        "data_type": "varchar(255)",
+        "is_nullable": "YES",
+        "ordinal_position": 12
+      },
+      {
+        "column_name": "peso_entrada_kg",
+        "data_type": "numeric",
+        "is_nullable": "YES",
+        "ordinal_position": 13
+      },
+      {
+        "column_name": "peso_medio_estimado_kg",
+        "data_type": "numeric",
+        "is_nullable": "YES",
+        "ordinal_position": 14
+      },
+      {
+        "column_name": "cms_previsto_kg",
+        "data_type": "numeric",
+        "is_nullable": "YES",
+        "ordinal_position": 15
+      },
+      {
+        "column_name": "cms_realizado_kg",
+        "data_type": "numeric",
+        "is_nullable": "YES",
+        "ordinal_position": 16
+      },
+      {
+        "column_name": "cmn_previsto_kg",
+        "data_type": "numeric",
+        "is_nullable": "YES",
+        "ordinal_position": 17
+      },
+      {
+        "column_name": "cmn_realizado_kg",
+        "data_type": "numeric",
+        "is_nullable": "YES",
+        "ordinal_position": 18
+      },
+      {
+        "column_name": "ms_dieta_meta_pc",
+        "data_type": "numeric",
+        "is_nullable": "YES",
+        "ordinal_position": 19
+      },
+      {
+        "column_name": "ms_dieta_real_pc",
+        "data_type": "numeric",
+        "is_nullable": "YES",
+        "ordinal_position": 20
+      },
+      {
+        "column_name": "cms_real_pc_pv",
+        "data_type": "numeric",
+        "is_nullable": "YES",
+        "ordinal_position": 21
+      },
+      {
+        "column_name": "batch_id",
+        "data_type": "varchar(255)",
+        "is_nullable": "YES",
+        "ordinal_position": 22
+      },
+      {
+        "column_name": "uploaded_at",
+        "data_type": "varchar(255)",
+        "is_nullable": "YES",
+        "ordinal_position": 23
+      },
+      {
+        "column_name": "processed",
+        "data_type": "boolean",
+        "is_nullable": "YES",
+        "ordinal_position": 24
       }
     ],
-    "create_table_sql": "-- Schema simulado para etl_staging_01_historico_consumo",
-    "column_count": 5,
-    "exists": false,
-    "source": "predefined_fallback",
-    "column_mapping": {},
-    "processed_at": "2025-08-05T00:43:52.157046"
+    "create_table_sql": "CREATE TABLE etl_staging_01_historico_consumo (\n  id INTEGER,\n  id_curral VARCHAR(255),\n  lote VARCHAR(255),\n  data VARCHAR(255),\n  qtd_animais INTEGER,\n  dias_confinamento INTEGER,\n  data_entrada VARCHAR(255),\n  leitura_cocho VARCHAR(255),\n  ajuste_kg NUMERIC,\n  leitura_noturna VARCHAR(255),\n  sexo VARCHAR(255),\n  grupo_genetico VARCHAR(255),\n  peso_entrada_kg NUMERIC,\n  peso_medio_estimado_kg NUMERIC,\n  cms_previsto_kg NUMERIC,\n  cms_realizado_kg NUMERIC,\n  cmn_previsto_kg NUMERIC,\n  cmn_realizado_kg NUMERIC,\n  ms_dieta_meta_pc NUMERIC,\n  ms_dieta_real_pc NUMERIC,\n  cms_real_pc_pv NUMERIC,\n  batch_id VARCHAR(255),\n  uploaded_at VARCHAR(255),\n  processed BOOLEAN\n);",
+    "column_count": 24,
+    "exists": true,
+    "source": "supabase_real",
+    "column_mapping": {
+      "id": "ID",
+      "id_curral": "TEXT",
+      "lote": "TEXT",
+      "data": "DATE",
+      "qtd_animais": "NUMERIC",
+      "dias_confinamento": "AUTO_DETECT",
+      "data_entrada": "DATE",
+      "leitura_cocho": "AUTO_DETECT",
+      "ajuste_kg": "NUMERIC",
+      "leitura_noturna": "AUTO_DETECT",
+      "sexo": "AUTO_DETECT",
+      "grupo_genetico": "AUTO_DETECT",
+      "peso_entrada_kg": "NUMERIC",
+      "peso_medio_estimado_kg": "NUMERIC",
+      "cms_previsto_kg": "NUMERIC",
+      "cms_realizado_kg": "NUMERIC",
+      "cmn_previsto_kg": "NUMERIC",
+      "cmn_realizado_kg": "NUMERIC",
+      "ms_dieta_meta_pc": "AUTO_DETECT",
+      "ms_dieta_real_pc": "AUTO_DETECT",
+      "cms_real_pc_pv": "AUTO_DETECT",
+      "batch_id": "ID",
+      "uploaded_at": "AUTO_DETECT",
+      "processed": "BOOLEAN"
+    },
+    "processed_at": "2025-08-05T13:55:56.906594"
   },
   "auto_mapping": [
     {
@@ -1227,31 +1366,31 @@
     },
     {
       "csv_column": "lote",
-      "db_column": null,
-      "confidence": 0.0,
+      "db_column": "lote",
+      "confidence": 1.0,
       "data_type": "TEXT",
-      "suggested": false
+      "suggested": true
     },
     {
       "csv_column": "tipo_de_engorda_curva_de_consumo_referência",
-      "db_column": null,
-      "confidence": 0.0,
+      "db_column": "cms_realizado_kg",
+      "confidence": 0.6,
       "data_type": "TEXT",
-      "suggested": false
+      "suggested": true
     },
     {
       "csv_column": "data",
-      "db_column": "data_column_1",
-      "confidence": 0.8,
+      "db_column": "data",
+      "confidence": 1.0,
       "data_type": "DATE",
       "suggested": true
     },
     {
       "csv_column": "qtd_animais",
-      "db_column": null,
-      "confidence": 0.0,
+      "db_column": "qtd_animais",
+      "confidence": 1.0,
       "data_type": "NUMERIC",
-      "suggested": false
+      "suggested": true
     },
     {
       "csv_column": "dieta_prevista",
@@ -1269,8 +1408,8 @@
     },
     {
       "csv_column": "data_entrada",
-      "db_column": "data_column_1",
-      "confidence": 0.6,
+      "db_column": "data_entrada",
+      "confidence": 1.0,
       "data_type": "DATE",
       "suggested": true
     },
@@ -1304,10 +1443,10 @@
     },
     {
       "csv_column": "sexo",
-      "db_column": null,
-      "confidence": 0.0,
+      "db_column": "sexo",
+      "confidence": 1.0,
       "data_type": "TEXT",
-      "suggested": false
+      "suggested": true
     },
     {
       "csv_column": "cod_grupo_genético",
@@ -1360,52 +1499,52 @@
     },
     {
       "csv_column": "peso_entrada_kg",
-      "db_column": null,
-      "confidence": 0.0,
+      "db_column": "peso_entrada_kg",
+      "confidence": 1.0,
       "data_type": "NUMERIC",
-      "suggested": false
+      "suggested": true
     },
     {
       "csv_column": "peso_médio_estimado_kg",
-      "db_column": null,
-      "confidence": 0.0,
+      "db_column": "peso_entrada_kg",
+      "confidence": 0.6,
       "data_type": "NUMERIC",
-      "suggested": false
+      "suggested": true
     },
     {
       "csv_column": "consumo_total_kg_mn",
-      "db_column": null,
-      "confidence": 0.0,
+      "db_column": "cms_realizado_kg",
+      "confidence": 0.6,
       "data_type": "NUMERIC",
-      "suggested": false
+      "suggested": true
     },
     {
       "csv_column": "consumo_total_kg_ms",
-      "db_column": null,
-      "confidence": 0.0,
+      "db_column": "cms_realizado_kg",
+      "confidence": 0.6,
       "data_type": "NUMERIC",
-      "suggested": false
+      "suggested": true
     },
     {
       "csv_column": "consumo_total_kg_ndt",
-      "db_column": null,
-      "confidence": 0.0,
+      "db_column": "cms_realizado_kg",
+      "confidence": 0.6,
       "data_type": "NUMERIC",
-      "suggested": false
+      "suggested": true
     },
     {
       "csv_column": "ms_dieta_meta",
-      "db_column": null,
-      "confidence": 0.0,
+      "db_column": "ms_dieta_meta_pc",
+      "confidence": 0.8,
       "data_type": "DATE",
-      "suggested": false
+      "suggested": true
     },
     {
       "csv_column": "ms_dieta_real",
-      "db_column": null,
-      "confidence": 0.0,
+      "db_column": "ms_dieta_real_pc",
+      "confidence": 0.8,
       "data_type": "DATE",
-      "suggested": false
+      "suggested": true
     },
     {
       "csv_column": "ndt_dieta_meta",
@@ -1880,7 +2019,7 @@
   "processing_info": {
     "skip_first_line_applied": true,
     "selected_table": "etl_staging_01_historico_consumo",
-    "processed_at": "2025-08-05T00:43:52.196289",
-    "file_path": "..\\..\\data\\temp\\20250805_004341_01_historico_consumo.csv"
+    "processed_at": "2025-08-05T13:55:57.007068",
+    "file_path": "..\\..\\data\\temp\\20250805_135543_01_historico_consumo.csv"
   }
 }

@@ -1,0 +1,111 @@
+{
+  "fileId": "03_desvio_distribuicao",
+  "tableName": "etl_staging_03_desvio_distribuicao",
+  "csvHeaders": [
+    "data",
+    "hora",
+    "trato",
+    "tratador",
+    "col_4",
+    "vagão",
+    "curral",
+    "col_7",
+    "dieta",
+    "plano_alimentar",
+    "lote",
+    "distribuído_kg",
+    "previsto_kg",
+    "desvio_kg",
+    "desvio",
+    "status"
+  ],
+  "mappings": [
+    {
+      "csvColumn": "data",
+      "sqlColumn": "data",
+      "type": "direct"
+    },
+    {
+      "csvColumn": "hora",
+      "sqlColumn": "hora",
+      "type": "direct"
+    },
+    {
+      "csvColumn": "trato",
+      "sqlColumn": "trato",
+      "type": "derived",
+      "transformations": {
+        "Trato 1": "1",
+        "Trato 2": "2",
+        "Trato 3": "3",
+        "Trato 4": "4",
+        "Trato 5": "5",
+        "Trato 6": "6"
+      }
+    },
+    {
+      "csvColumn": "tratador",
+      "sqlColumn": "tratador",
+      "type": "direct"
+    },
+    {
+      "csvColumn": "vagão",
+      "sqlColumn": "vagao",
+      "type": "direct"
+    },
+    {
+      "csvColumn": "curral",
+      "sqlColumn": "curral",
+      "type": "derived",
+      "transformations": {
+        "ENF01": "76",
+        "ENF02": "77"
+      }
+    },
+    {
+      "csvColumn": "dieta",
+      "sqlColumn": "dieta",
+      "type": "direct"
+    },
+    {
+      "csvColumn": "plano_alimentar",
+      "sqlColumn": "plano_alimentar",
+      "type": "direct"
+    },
+    {
+      "csvColumn": "lote",
+      "sqlColumn": "lote",
+      "type": "direct"
+    },
+    {
+      "csvColumn": "distribuído_kg",
+      "sqlColumn": "distribuido_kg",
+      "type": "direct"
+    },
+    {
+      "csvColumn": "previsto_kg",
+      "sqlColumn": "previsto_kg",
+      "type": "direct"
+    },
+    {
+      "csvColumn": "desvio_kg",
+      "sqlColumn": "desvio_kg",
+      "type": "direct"
+    },
+    {
+      "csvColumn": "desvio",
+      "sqlColumn": "desvio_pct",
+      "type": "direct"
+    },
+    {
+      "csvColumn": "status",
+      "sqlColumn": "status",
+      "type": "direct"
+    }
+  ],
+  "excludedRows": [],
+  "sqlSchema": "CREATE TABLE etl_staging_03_desvio_distribuicao (\n  id INTEGER NOT NULL,\n  data DATE,\n  hora TIME,\n  trato TEXT,\n  tratador TEXT,\n  vagao TEXT,\n  curral TEXT,\n  dieta TEXT,\n  plano_alimentar NUMERIC,\n  lote TEXT,\n  distribuido_kg NUMERIC,\n  previsto_kg NUMERIC,\n  desvio_kg NUMERIC,\n  desvio_pct NUMERIC,\n  status TEXT\n);",
+  "createdAt": "2025-08-05T18:09:41.263Z",
+  "description": "Configuração ETL para 03_desvio_distribuicao",
+  "version": "1.0"
+}

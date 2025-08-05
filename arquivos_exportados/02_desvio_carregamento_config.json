@@ -1,0 +1,93 @@
+{
+  "fileId": "02_desvio_carregamento",
+  "tableName": "etl_staging_02_desvio_carregamento",
+  "csvHeaders": [
+    "data",
+    "hora",
+    "pazeiro",
+    "col_3",
+    "vagão",
+    "dieta",
+    "nro_carregamento",
+    "col_7",
+    "ingrediente",
+    "tipo_ingrediente",
+    "carregado_kg",
+    "previsto_kg",
+    "desvio_kg",
+    "desvio",
+    "status"
+  ],
+  "mappings": [
+    {
+      "csvColumn": "data",
+      "sqlColumn": "data",
+      "type": "direct"
+    },
+    {
+      "csvColumn": "hora",
+      "sqlColumn": "hora_carregamento",
+      "type": "direct"
+    },
+    {
+      "csvColumn": "nro_carregamento",
+      "sqlColumn": "carregamento",
+      "type": "direct"
+    },
+    {
+      "csvColumn": "pazeiro",
+      "sqlColumn": "pazeiro",
+      "type": "direct"
+    },
+    {
+      "csvColumn": "vagão",
+      "sqlColumn": "vagao",
+      "type": "direct"
+    },
+    {
+      "csvColumn": "dieta",
+      "sqlColumn": "dieta",
+      "type": "direct"
+    },
+    {
+      "csvColumn": "ingrediente",
+      "sqlColumn": "ingrediente",
+      "type": "direct"
+    },
+    {
+      "csvColumn": "tipo_ingrediente",
+      "sqlColumn": "tipo_ingrediente",
+      "type": "direct"
+    },
+    {
+      "csvColumn": "previsto_kg",
+      "sqlColumn": "previsto_kg",
+      "type": "direct"
+    },
+    {
+      "csvColumn": "carregado_kg",
+      "sqlColumn": "realizado_kg",
+      "type": "direct"
+    },
+    {
+      "csvColumn": "desvio_kg",
+      "sqlColumn": "desvio_kg",
+      "type": "direct"
+    },
+    {
+      "csvColumn": "desvio",
+      "sqlColumn": "desvio_pc",
+      "type": "direct"
+    },
+    {
+      "csvColumn": "status",
+      "sqlColumn": "status",
+      "type": "direct"
+    }
+  ],
+  "excludedRows": [],
+  "sqlSchema": "CREATE TABLE etl_staging_02_desvio_carregamento (\n  id BIGSERIAL PRIMARY KEY,\n  data DATE NOT NULL,\n  hora_carregamento TIME,\n  carregamento TEXT,\n  pazeiro TEXT,\n  vagao TEXT,\n  dieta TEXT,\n  ingrediente TEXT,\n  tipo_ingrediente TEXT,\n  previsto_kg NUMERIC,\n  realizado_kg NUMERIC,\n  desvio_kg NUMERIC,\n  desvio_pc NUMERIC,\n  status TEXT,\n  batch_id UUID DEFAULT gen_random_uuid(),\n  uploaded_at TIMESTAMP DEFAULT NOW(),\n  processed BOOLEAN DEFAULT FALSE\n);",
+  "createdAt": "2025-08-05T17:05:30.876Z",
+  "description": "Configuração ETL para 02_desvio_carregamento",
+  "version": "1.0"
+}

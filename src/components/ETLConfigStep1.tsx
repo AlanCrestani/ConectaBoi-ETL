@@ -13,6 +13,7 @@ import { Upload, FileText, ArrowRight, Check } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface ETLConfigStep1Props {
   fileId: string;
@@ -63,67 +64,93 @@ const ETLConfigStep1 = ({ fileId, onNext }: ETLConfigStep1Props) => {
   const handleTableSelect = async (tableName: string) => {
     setSelectedTable(tableName);
 
-    // Gerar schema básico baseado no nome da tabela
-    const schemaTemplates: Record<string, string> = {
-      etl_staging_01_historico_consumo: `CREATE TABLE etl_staging_01_historico_consumo (
-  id BIGSERIAL PRIMARY KEY,
-  id_curral TEXT NOT NULL,
-  lote TEXT,
-  data DATE NOT NULL,
-  qtd_animais INTEGER,
-  dias_confinamento INTEGER,
-  data_entrada DATE,
-  leitura_cocho TEXT,
-  ajuste_kg NUMERIC,
-  leitura_noturna TEXT,
-  sexo TEXT,
-  grupo_genetico TEXT,
-  peso_entrada_kg NUMERIC,
-  peso_medio_estimado_kg NUMERIC,
-  cms_previsto_kg NUMERIC,
-  cms_realizado_kg NUMERIC,
-  cmn_previsto_kg NUMERIC,
-  cmn_realizado_kg NUMERIC,
-  ms_dieta_meta_pc NUMERIC,
-  ms_dieta_real_pc NUMERIC,
-  cms_real_pc_pv NUMERIC,
-  batch_id UUID DEFAULT gen_random_uuid(),
-  uploaded_at TIMESTAMP DEFAULT NOW(),
-  processed BOOLEAN DEFAULT FALSE
-);`,
-      etl_staging_02_desvio_carregamento: `CREATE TABLE etl_staging_02_desvio_carregamento (
-  id BIGSERIAL PRIMARY KEY,
-  data DATE NOT NULL,
-  hora_carregamento TIME,
-  carregamento TEXT,
-  pazeiro TEXT,
-  vagao TEXT,
-  dieta TEXT,
-  ingrediente TEXT,
-  tipo_ingrediente TEXT,
-  previsto_kg NUMERIC,
-  realizado_kg NUMERIC,
-  desvio_kg NUMERIC,
-  desvio_pc NUMERIC,
-  status TEXT,
-  batch_id UUID DEFAULT gen_random_uuid(),
-  uploaded_at TIMESTAMP DEFAULT NOW(),
-  processed BOOLEAN DEFAULT FALSE
-);`,
-    };
+    try {
+      toast({
+        title: "Buscando schema...",
+        description: `Consultando estrutura real da tabela ${tableName} no Supabase`,
+      });
 
-    const schema =
-      schemaTemplates[tableName] ||
-      `CREATE TABLE ${tableName} (
-  id BIGSERIAL PRIMARY KEY,
-  data DATE NOT NULL,
-  batch_id UUID DEFAULT gen_random_uuid(),
-  uploaded_at TIMESTAMP DEFAULT NOW(),
-  processed BOOLEAN DEFAULT FALSE
-  -- Adicione mais colunas conforme necessário
+      // ✨ BUSCAR SCHEMA REAL DO SUPABASE - Não usar predefinidos!
+      const response = await fetch(
+        `http://localhost:8000/etl/table-schema/${tableName}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`Erro ${response.status} ao buscar schema da tabela`);
+      }
+
+      const result = await response.json();
+
+      if (result.status === "success" && result.schema) {
+        // Usar o CREATE TABLE SQL real do Supabase
+        const realSchema =
+          result.schema.create_table_sql ||
+          `-- Schema obtido via API do Supabase
+-- Tabela: ${result.schema.table_name}
+-- Colunas: ${result.schema.column_count}
+-- Fonte: ${result.schema.source}
+
+CREATE TABLE ${result.schema.table_name} (
+${result.schema.columns
+  .map(
+    (col) =>
+      `  ${col.column_name} ${col.data_type.toUpperCase()}${
+        col.is_nullable === "NO" ? " NOT NULL" : ""
+      }`
+  )
+  .join(",\n")}
 );`;
 
-    setSqlSchema(schema);
+        setSqlSchema(realSchema);
+
+        toast({
+          title: "✅ Schema obtido!",
+          description: `Schema real da tabela ${tableName} carregado com ${result.schema.column_count} colunas (fonte: ${result.schema.source})`,
+        });
+
+        console.log("🔍 Schema real obtido:", {
+          table: result.schema.table_name,
+          columns: result.schema.column_count,
+          source: result.schema.source,
+          schema: realSchema,
+        });
+      } else {
+        throw new Error(result.error || "Schema não encontrado na resposta");
+      }
+    } catch (error) {
+      console.error("❌ Erro ao buscar schema real:", error);
+
+      toast({
+        title: "❌ Erro ao buscar schema",
+        description: `Não foi possível obter o schema real da tabela ${tableName}. Erro: ${
+          error instanceof Error ? error.message : "Erro desconhecido"
+        }`,
+        variant: "destructive",
+      });
+
+      // Schema de fallback apenas em caso de erro real
+      const fallbackSchema = `-- FALLBACK: Erro ao buscar schema real do Supabase
+-- PROBLEMA: ${error instanceof Error ? error.message : "Erro desconhecido"}
+-- TABELA: ${tableName}
+
+CREATE TABLE ${tableName} (
+  id BIGSERIAL PRIMARY KEY,
+  data DATE NOT NULL,
+  -- ⚠️ ADICIONE AS COLUNAS CORRETAS MANUALMENTE
+  -- Este é apenas um fallback devido ao erro acima
+  batch_id UUID DEFAULT gen_random_uuid(),
+  uploaded_at TIMESTAMP DEFAULT NOW(),
+  processed BOOLEAN DEFAULT FALSE
+);`;
+
+      setSqlSchema(fallbackSchema);
+    }
   };
 
   const handleFileUpload = async (

@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Teste Quick ETL com Mappings</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        padding: 20px;
+      }
+      .result {
+        margin: 20px 0;
+        padding: 15px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+      }
+      .success {
+        background-color: #d4edda;
+        border-color: #c3e6cb;
+      }
+      .error {
+        background-color: #f8d7da;
+        border-color: #f5c6cb;
+      }
+      pre {
+        background: #f8f9fa;
+        padding: 10px;
+        border-radius: 5px;
+        overflow-x: auto;
+      }
+      button {
+        padding: 10px 20px;
+        margin: 5px;
+        background: #007bff;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+      button:hover {
+        background: #0056b3;
+      }
+      input[type="file"] {
+        margin: 10px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Teste Quick ETL - Debug de Mappings</h1>
+
+    <div>
+      <h2>1. Upload de Arquivo</h2>
+      <input type="file" id="fileInput" accept=".csv" />
+      <button onclick="uploadFile()">Upload Arquivo</button>
+    </div>
+
+    <div>
+      <h2>2. Processar com Configuração Completa</h2>
+      <button onclick="processWithMappings()">Processar com Mappings</button>
+      <button onclick="processWithoutMappings()">Processar sem Mappings</button>
+    </div>
+
+    <div id="results"></div>
+
+    <script>
+      let uploadedFileId = null;
+
+      // Configuração completa com mappings para etl_staging_03_desvio_distribuicao
+      const configComMappings = {
+        transformations: {
+          PRETO: "PRETO_NORMALIZADO",
+          VERDE: "VERDE_NORMALIZADO",
+        },
+        removedColumns: ["col_4", "col_7"],
+        fileId: "03_desvio_distribuicao",
+        originalFileName: "03_desvio_distribuicao.csv",
+        previewData: [],
+        columns: [
+          "data",
+          "hora",
+          "trato",
+          "tratador",
+          "vagao",
+          "curral",
+          "dieta",
+          "plano_alimentar",
+          "lote",
+          "distribuido_kg",
+          "previsto_kg",
+          "desvio_kg",
+          "desvio_pct",
+          "status",
+        ],
+        mappings: [
+          { csvColumn: "data", sqlColumn: "data", type: "direct" },
+          { csvColumn: "hora", sqlColumn: "hora", type: "direct" },
+          { csvColumn: "trato", sqlColumn: "trato", type: "direct" },
+          { csvColumn: "tratador", sqlColumn: "tratador", type: "direct" },
+          { csvColumn: "vagão", sqlColumn: "vagao", type: "direct" },
+          { csvColumn: "curral", sqlColumn: "curral", type: "direct" },
+          { csvColumn: "dieta", sqlColumn: "dieta", type: "direct" },
+          {
+            csvColumn: "plano_alimentar",
+            sqlColumn: "plano_alimentar",
+            type: "direct",
+          },
+          { csvColumn: "lote", sqlColumn: "lote", type: "direct" },
+          {
+            csvColumn: "distribuído_kg",
+            sqlColumn: "distribuido_kg",
+            type: "direct",
+          },
+          {
+            csvColumn: "previsto_kg",
+            sqlColumn: "previsto_kg",
+            type: "direct",
+          },
+          { csvColumn: "desvio_kg", sqlColumn: "desvio_kg", type: "direct" },
+          { csvColumn: "desvio", sqlColumn: "desvio_pct", type: "direct" },
+          {
+            csvColumn: "status",
+            sqlColumn: "status",
+            type: "direct",
+            transformations: {
+              PRETO: "PRETO_NORMALIZADO",
+              VERDE: "VERDE_NORMALIZADO",
+            },
+          },
+        ],
+      };
+
+      async function uploadFile() {
+        const fileInput = document.getElementById("fileInput");
+        const file = fileInput.files[0];
+
+        if (!file) {
+          addResult("error", "Selecione um arquivo primeiro");
+          return;
+        }
+
+        try {
+          const formData = new FormData();
+          formData.append("file", file);
+
+          const response = await fetch("http://localhost:8000/upload-csv", {
+            method: "POST",
+            body: formData,
+          });
+
+          if (!response.ok) {
+            throw new Error(`Erro ${response.status}`);
+          }
+
+          const result = await response.json();
+          uploadedFileId = result.file_id;
+
+          addResult(
+            "success",
+            `✅ Arquivo uploaded: ${result.file_id}`,
+            result
+          );
+        } catch (error) {
+          addResult("error", `❌ Erro no upload: ${error.message}`);
+        }
+      }
+
+      async function processWithMappings() {
+        if (!uploadedFileId) {
+          addResult("error", "Faça upload de um arquivo primeiro");
+          return;
+        }
+
+        const etlConfig = {
+          file_id: uploadedFileId,
+          transformations: configComMappings.transformations,
+          excluded_columns: configComMappings.removedColumns,
+          excluded_rows: [],
+          mappings: configComMappings.mappings,
+          skip_first_line: false,
+        };
+
+        addResult("info", "🚀 Enviando configuração COM mappings:", etlConfig);
+
+        try {
+          const response = await fetch(
+            "http://localhost:8000/etl/process-quick",
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(etlConfig),
+            }
+          );
+
+          if (!response.ok) {
+            throw new Error(`Erro ${response.status}`);
+          }
+
+          const result = await response.json();
+          addResult(
+            "success",
+            `✅ Processado COM mappings: ${result.data?.length || 0} registros`,
+            result
+          );
+        } catch (error) {
+          addResult(
+            "error",
+            `❌ Erro no processamento COM mappings: ${error.message}`
+          );
+        }
+      }
+
+      async function processWithoutMappings() {
+        if (!uploadedFileId) {
+          addResult("error", "Faça upload de um arquivo primeiro");
+          return;
+        }
+
+        const etlConfig = {
+          file_id: uploadedFileId,
+          transformations: configComMappings.transformations,
+          excluded_columns: configComMappings.removedColumns,
+          excluded_rows: [],
+          mappings: [], // ❌ SEM MAPPINGS
+          skip_first_line: false,
+        };
+
+        addResult("info", "🚀 Enviando configuração SEM mappings:", etlConfig);
+
+        try {
+          const response = await fetch(
+            "http://localhost:8000/etl/process-quick",
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(etlConfig),
+            }
+          );
+
+          if (!response.ok) {
+            throw new Error(`Erro ${response.status}`);
+          }
+
+          const result = await response.json();
+          addResult(
+            "success",
+            `✅ Processado SEM mappings: ${result.data?.length || 0} registros`,
+            result
+          );
+        } catch (error) {
+          addResult(
+            "error",
+            `❌ Erro no processamento SEM mappings: ${error.message}`
+          );
+        }
+      }
+
+      function addResult(type, message, data = null) {
+        const resultsDiv = document.getElementById("results");
+        const resultDiv = document.createElement("div");
+        resultDiv.className = `result ${type}`;
+
+        let content = `<h3>${message}</h3>`;
+        if (data) {
+          content += `<details><summary>Ver dados completos</summary><pre>${JSON.stringify(
+            data,
+            null,
+            2
+          )}</pre></details>`;
+        }
+
+        resultDiv.innerHTML = content;
+        resultsDiv.appendChild(resultDiv);
+      }
+    </script>
+  </body>
+</html>

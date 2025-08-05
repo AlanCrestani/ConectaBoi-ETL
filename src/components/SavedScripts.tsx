@@ -18,6 +18,7 @@ import {
   CheckCircle,
   AlertCircle,
   Copy,
+  Trash2,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -41,6 +42,7 @@ export function SavedScripts() {
   const [scripts, setScripts] = useState<SavedScript[]>([]);
   const [loading, setLoading] = useState(true);
   const [executing, setExecuting] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState<string | null>(null);
   const { toast } = useToast();
 
   const loadScripts = useCallback(async () => {
@@ -68,7 +70,7 @@ export function SavedScripts() {
 
   useEffect(() => {
     loadScripts();
-  }, [toast]);
+  }, [loadScripts]);
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -98,6 +100,41 @@ export function SavedScripts() {
       title: "Download Iniciado",
       description: `Script ${script.name} será baixado em breve.`,
     });
+  };
+
+  const deleteScript = async (scriptName: string) => {
+    try {
+      setDeleting(scriptName);
+      const response = await fetch(
+        `http://localhost:8000/scripts/delete/${encodeURIComponent(
+          scriptName
+        )}`,
+        {
+          method: "DELETE",
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Erro ao excluir script");
+      }
+
+      toast({
+        title: "Script Excluído",
+        description: `Script "${scriptName}" foi excluído com sucesso.`,
+      });
+
+      // Recarregar a lista de scripts
+      await loadScripts();
+    } catch (error) {
+      console.error("Erro ao excluir script:", error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível excluir o script.",
+        variant: "destructive",
+      });
+    } finally {
+      setDeleting(null);
+    }
   };
 
   if (loading) {
@@ -238,6 +275,16 @@ export function SavedScripts() {
                   >
                     <Copy className="h-4 w-4 mr-2" />
                     Copiar Comando
+                  </Button>
+
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => deleteScript(script.name)}
+                    disabled={deleting === script.name}
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    {deleting === script.name ? "Excluindo..." : "Excluir"}
                   </Button>
                 </div>
 

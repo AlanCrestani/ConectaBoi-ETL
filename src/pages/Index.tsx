@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Header from "@/components/Header";
 import FileSelector from "@/components/FileSelector";
 import ETLConfigStep1 from "@/components/ETLConfigStep1";
@@ -66,6 +66,9 @@ const Index = () => {
   // Estado para controlar a exibição do gerenciador de configurações
   const [showConfigManager, setShowConfigManager] = useState(false);
 
+  // Estado para controlar configuração carregada pendente
+  const [pendingConfigJump, setPendingConfigJump] = useState(false);
+
   const handleRestoreSession = () => {
     setShowRestoreAlert(false);
     console.log("📁 Sessão anterior restaurada:", {
@@ -97,6 +100,13 @@ const Index = () => {
     headers: string[],
     schema: string
   ) => {
+    console.log("📥 handleStep1Complete recebeu:", {
+      dataLength: Array.isArray(data) ? data.length : "não é array",
+      headersLength: Array.isArray(headers) ? headers.length : "não é array",
+      headers: headers,
+      schemaLength: schema?.length || 0,
+    });
+
     setCsvData(data as Record<string, unknown>[]);
     setCsvHeaders(headers);
     setSqlSchema(schema);
@@ -226,14 +236,23 @@ const Index = () => {
           )}
 
           {currentStep === "config3" && (
-            <ETLConfigStep3
-              fileId={selectedFile}
-              csvData={csvData}
-              csvHeaders={csvHeaders}
-              mappings={mappings}
-              onNext={handleStep3Complete}
-              onBack={handleBack}
-            />
+            <>
+              {console.log("🎭 Renderizando ETLConfigStep3 com:", {
+                selectedFile,
+                csvDataLength: csvData.length,
+                csvHeadersLength: csvHeaders.length,
+                mappingsLength: mappings.length,
+                mappings: mappings,
+              })}
+              <ETLConfigStep3
+                fileId={selectedFile}
+                csvData={csvData}
+                csvHeaders={csvHeaders}
+                mappings={mappings}
+                onNext={handleStep3Complete}
+                onBack={handleBack}
+              />
+            </>
           )}
 
           {currentStep === "config4" && (

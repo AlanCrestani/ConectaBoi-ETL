@@ -54,8 +54,10 @@ const ETLConfigStep3 = ({
   onNext,
   onBack,
 }: ETLConfigStep3Props) => {
-  const [excludedRows, setExcludedRows] = useState<Set<number>>(new Set([0])); // First row excluded by default
-  const [showPreview, setShowPreview] = useState(false);
+  const [excludedRows, setExcludedRows] = useState<Set<number>>(
+    () => new Set([0])
+  ); // First row excluded by default
+  const [showPreview, setShowPreview] = useState(true);
   const [sortConfig, setSortConfig] = useState<{
     column: number | "row-number" | null;
     direction: "asc" | "desc" | null;
@@ -89,11 +91,7 @@ const ETLConfigStep3 = ({
     .filter((item) => item.isShort)
     .map((item) => item.index);
 
-  // Initialize excluded rows with first row and short rows
-  useState(() => {
-    const initialExcluded = new Set([0, ...shortRows]);
-    setExcludedRows(initialExcluded);
-  });
+  // Initialize excluded rows with first row and short rows removed - CORREÇÃO DO LOOP INFINITO
 
   // Proteção contra dados undefined ou vazios (após os hooks)
   if (
@@ -109,7 +107,13 @@ const ETLConfigStep3 = ({
       mappings: !!mappings,
       csvDataLength: csvData?.length,
       mappingsLength: mappings?.length,
+      csvHeadersLength: csvHeaders?.length,
     });
+
+    console.log("🔍 Detalhes dos dados recebidos:");
+    console.log("- csvData:", csvData);
+    console.log("- csvHeaders:", csvHeaders);
+    console.log("- mappings:", mappings);
 
     return (
       <div className="space-y-6 max-w-6xl mx-auto">
@@ -120,6 +124,18 @@ const ETLConfigStep3 = ({
           <p className="text-muted-foreground mb-4">
             Não foi possível carregar os dados necessários para o preview.
           </p>
+          <div className="text-left bg-muted p-4 rounded-lg mb-4">
+            <p className="text-sm">
+              <strong>Debug Info:</strong>
+            </p>
+            <p className="text-sm">• CSV Data: {csvData?.length || 0} linhas</p>
+            <p className="text-sm">
+              • Headers: {csvHeaders?.length || 0} colunas
+            </p>
+            <p className="text-sm">
+              • Mappings: {mappings?.length || 0} mapeamentos
+            </p>
+          </div>
           <Button
             variant="outline"
             onClick={onBack}
@@ -482,6 +498,7 @@ const ETLConfigStep3 = ({
       }, {} as Record<string, unknown>)
     ),
     columns: csvHeaders,
+    mappings: mappings, // ✅ CORREÇÃO: Adicionar mappings para Quick ETL funcionar!
   };
 
   return (
@@ -529,13 +546,13 @@ const ETLConfigStep3 = ({
             <Eye className="h-4 w-4 mr-2" />
             Preview & Validação
           </TabsTrigger>
-          <TabsTrigger value="quick-etl" className="flex items-center">
-            <Zap className="h-4 w-4 mr-2" />
-            Quick ETL
-          </TabsTrigger>
           <TabsTrigger value="configs" className="flex items-center">
             <Settings className="h-4 w-4 mr-2" />
             Configurações
+          </TabsTrigger>
+          <TabsTrigger value="quick-etl" className="flex items-center">
+            <Zap className="h-4 w-4 mr-2" />
+            Quick ETL
           </TabsTrigger>
           <TabsTrigger value="scripts" className="flex items-center">
             <FileText className="h-4 w-4 mr-2" />

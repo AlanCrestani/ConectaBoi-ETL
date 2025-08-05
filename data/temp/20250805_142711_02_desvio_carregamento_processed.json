@@ -1,0 +1,333 @@
+{
+  "csv_data": {
+    "headers": [
+      "data",
+      "hora",
+      "pazeiro",
+      "col_3",
+      "vagão",
+      "dieta",
+      "nro_carregamento",
+      "col_7",
+      "ingrediente",
+      "tipo_ingrediente",
+      "carregado_kg",
+      "previsto_kg",
+      "desvio_kg",
+      "desvio",
+      "status"
+    ],
+    "sample_rows": [
+      {
+        "data": "03/08/2025",
+        "hora": "16:30:33",
+        "pazeiro": "FERNANDO",
+        "col_3": "",
+        "vagão": "BAHMAN",
+        "dieta": "TERMINACION SORG/MILHETO16/7/25",
+        "nro_carregamento": "13",
+        "col_7": "",
+        "ingrediente": "Pré-Mistura",
+        "tipo_ingrediente": "Pré-Mistura",
+        "carregado_kg": "423,53956",
+        "previsto_kg": "413,00000",
+        "desvio_kg": "10,53956",
+        "desvio": "2,552 %",
+        "status": "VERDE"
+      },
+      {
+        "data": "03/08/2025",
+        "hora": "15:40:49",
+        "pazeiro": "FERNANDO",
+        "col_3": "",
+        "vagão": "BAHMAN",
+        "dieta": "TERMINACION SORG/MILHETO16/7/25",
+        "nro_carregamento": "12",
+        "col_7": "",
+        "ingrediente": "Pré-Mistura",
+        "tipo_ingrediente": "Pré-Mistura",
+        "carregado_kg": "452,05663",
+        "previsto_kg": "447,00000",
+        "desvio_kg": "5,05663",
+        "desvio": "1,131 %",
+        "status": "VERDE"
+      },
+      {
+        "data": "03/08/2025",
+        "hora": "14:49:06",
+        "pazeiro": "FERNANDO",
+        "col_3": "",
+        "vagão": "BAHMAN",
+        "dieta": "CRECIMIENTO MILHETO/SORG16/7/25",
+        "nro_carregamento": "11",
+        "col_7": "",
+        "ingrediente": "Pré-Mistura",
+        "tipo_ingrediente": "Pré-Mistura",
+        "carregado_kg": "409,83116",
+        "previsto_kg": "406,00000",
+        "desvio_kg": "3,83116",
+        "desvio": "0,944 %",
+        "status": "VERDE"
+      },
+      {
+        "data": "03/08/2025",
+        "hora": "14:02:50",
+        "pazeiro": "FERNANDO",
+        "col_3": "",
+        "vagão": "BAHMAN",
+        "dieta": "CRECIMIENTO MILHETO/SORG16/7/25",
+        "nro_carregamento": "10",
+        "col_7": "",
+        "ingrediente": "Pré-Mistura",
+        "tipo_ingrediente": "Pré-Mistura",
+        "carregado_kg": "318,45399",
+        "previsto_kg": "324,00000",
+        "desvio_kg": "5,54601",
+        "desvio": "-1,712 %",
+        "status": "VERDE"
+      },
+      {
+        "data": "03/08/2025",
+        "hora": "13:20:49",
+        "pazeiro": "FERNANDO",
+        "col_3": "",
+        "vagão": "BAHMAN",
+        "dieta": "TERMINACION SORG/MILHETO16/7/25",
+        "nro_carregamento": "9",
+        "col_7": "",
+        "ingrediente": "Pré-Mistura",
+        "tipo_ingrediente": "Pré-Mistura",
+        "carregado_kg": "334,95241",
+        "previsto_kg": "325,00000",
+        "desvio_kg": "9,95241",
+        "desvio": "3,062 %",
+        "status": "AMARELO"
+      },
+      {
+        "data": "03/08/2025",
+        "hora": "11:45:00",
+        "pazeiro": "FERNANDO",
+        "col_3": "",
+        "vagão": "BAHMAN",
+        "dieta": "TERMINACION SORG/MILHETO16/7/25",
+        "nro_carregamento": "8",
+        "col_7": "",
+        "ingrediente": "Pré-Mistura",
+        "tipo_ingrediente": "Pré-Mistura",
+        "carregado_kg": "452,05663",
+        "previsto_kg": "447,00000",
+        "desvio_kg": "5,05663",
+        "desvio": "1,131 %",
+        "status": "VERDE"
+      },
+      {
+        "data": "03/08/2025",
+        "hora": "10:59:42",
+        "pazeiro": "FERNANDO",
+        "col_3": "",
+        "vagão": "BAHMAN",
+        "dieta": "CRECIMIENTO MILHETO/SORG16/7/25",
+        "nro_carregamento": "7",
+        "col_7": "",
+        "ingrediente": "Pré-Mistura",
+        "tipo_ingrediente": "Pré-Mistura",
+        "carregado_kg": "340,88590",
+        "previsto_kg": "326,00000",
+        "desvio_kg": "14,88590",
+        "desvio": "4,566 %",
+        "status": "AMARELO"
+      },
+      {
+        "data": "03/08/2025",
+        "hora": "10:07:57",
+        "pazeiro": "FERNANDO",
+        "col_3": "",
+        "vagão": "BAHMAN",
+        "dieta": "TERMINACION SORG/MILHETO16/7/25",
+        "nro_carregamento": "6",
+        "col_7": "",
+        "ingrediente": "Pré-Mistura",
+        "tipo_ingrediente": "Pré-Mistura",
+        "carregado_kg": "331,88320",
+        "previsto_kg": "332,00000",
+        "desvio_kg": "0,11680",
+        "desvio": "-0,035 %",
+        "status": "VERDE"
+      },
+      {
+        "data": "03/08/2025",
+        "hora": "09:28:06",
+        "pazeiro": "FERNANDO",
+        "col_3": "",
+        "vagão": "BAHMAN",
+        "dieta": "TERMINACION SORG/MILHETO16/7/25",
+        "nro_carregamento": "5",
+        "col_7": "",
+        "ingrediente": "Pré-Mistura",
+        "tipo_ingrediente": "Pré-Mistura",
+        "carregado_kg": "447,05600",
+        "previsto_kg": "447,00000",
+        "desvio_kg": "0,05600",
+        "desvio": "0,013 %",
+        "status": "VERDE"
+      },
+      {
+        "data": "03/08/2025",
+        "hora": "08:35:52",
+        "pazeiro": "FERNANDO",
+        "col_3": "",
+        "vagão": "BAHMAN",
+        "dieta": "CRECIMIENTO MILHETO/SORG16/7/25",
+        "nro_carregamento": "4",
+        "col_7": "",
+        "ingrediente": "Pré-Mistura",
+        "tipo_ingrediente": "Pré-Mistura",
+        "carregado_kg": "165,41447",
+        "previsto_kg": "150,00000",
+        "desvio_kg": "15,41447",
+        "desvio": "10,276 %",
+        "status": "PRETO"
+      }
+    ],
+    "total_rows": 2104,
+    "encoding_used": "utf-8",
+    "original_headers": [
+      "Unnamed: 0",
+      "Unnamed: 1",
+      "Unnamed: 2",
+      "DESVIO DO CARREGAMENTO",
+      "Unnamed: 4",
+      "Unnamed: 5",
+      "Unnamed: 6",
+      "Unnamed: 7",
+      "Unnamed: 8",
+      "Unnamed: 9",
+      "Unnamed: 10",
+      "Unnamed: 11",
+      "Unnamed: 12",
+      "Unnamed: 13",
+      "Unnamed: 14"
+    ]
+  },
+  "table_schema": {
+    "table_name": "etl_staging_02_desvio_carregamento",
+    "columns": [],
+    "create_table_sql": "-- Erro ao obter schema da tabela etl_staging_02_desvio_carregamento: Impossível obter schema da tabela etl_staging_02_desvio_carregamento. Verifique conectividade com Supabase.",
+    "column_count": 0,
+    "exists": false,
+    "error": "Impossível obter schema da tabela etl_staging_02_desvio_carregamento. Verifique conectividade com Supabase."
+  },
+  "auto_mapping": [
+    {
+      "csv_column": "data",
+      "db_column": "data",
+      "confidence": 0.5,
+      "data_type": "DATE",
+      "suggested": false
+    },
+    {
+      "csv_column": "hora",
+      "db_column": "hora",
+      "confidence": 0.5,
+      "data_type": "DATE",
+      "suggested": false
+    },
+    {
+      "csv_column": "pazeiro",
+      "db_column": "pazeiro",
+      "confidence": 0.5,
+      "data_type": "TEXT",
+      "suggested": false
+    },
+    {
+      "csv_column": "col_3",
+      "db_column": "col_3",
+      "confidence": 0.5,
+      "data_type": "TEXT",
+      "suggested": false
+    },
+    {
+      "csv_column": "vagão",
+      "db_column": "vagão",
+      "confidence": 0.5,
+      "data_type": "TEXT",
+      "suggested": false
+    },
+    {
+      "csv_column": "dieta",
+      "db_column": "dieta",
+      "confidence": 0.5,
+      "data_type": "TEXT",
+      "suggested": false
+    },
+    {
+      "csv_column": "nro_carregamento",
+      "db_column": "nro_carregamento",
+      "confidence": 0.5,
+      "data_type": "NUMERIC",
+      "suggested": false
+    },
+    {
+      "csv_column": "col_7",
+      "db_column": "col_7",
+      "confidence": 0.5,
+      "data_type": "TEXT",
+      "suggested": false
+    },
+    {
+      "csv_column": "ingrediente",
+      "db_column": "ingrediente",
+      "confidence": 0.5,
+      "data_type": "TEXT",
+      "suggested": false
+    },
+    {
+      "csv_column": "tipo_ingrediente",
+      "db_column": "tipo_ingrediente",
+      "confidence": 0.5,
+      "data_type": "TEXT",
+      "suggested": false
+    },
+    {
+      "csv_column": "carregado_kg",
+      "db_column": "carregado_kg",
+      "confidence": 0.5,
+      "data_type": "NUMERIC",
+      "suggested": false
+    },
+    {
+      "csv_column": "previsto_kg",
+      "db_column": "previsto_kg",
+      "confidence": 0.5,
+      "data_type": "NUMERIC",
+      "suggested": false
+    },
+    {
+      "csv_column": "desvio_kg",
+      "db_column": "desvio_kg",
+      "confidence": 0.5,
+      "data_type": "NUMERIC",
+      "suggested": false
+    },
+    {
+      "csv_column": "desvio",
+      "db_column": "desvio",
+      "confidence": 0.5,
+      "data_type": "TEXT",
+      "suggested": false
+    },
+    {
+      "csv_column": "status",
+      "db_column": "status",
+      "confidence": 0.5,
+      "data_type": "TEXT",
+      "suggested": false
+    }
+  ],
+  "processing_info": {
+    "skip_first_line_applied": true,
+    "selected_table": "etl_staging_02_desvio_carregamento",
+    "processed_at": "2025-08-05T14:27:19.566303",
+    "file_path": "..\\..\\data\\temp\\20250805_142711_02_desvio_carregamento.csv"
+  }
+}

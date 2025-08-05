@@ -11,8 +11,18 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { ArrowRight, ArrowLeft, MapPin, Plus, Trash2 } from "lucide-react";
+import {
+  ArrowRight,
+  ArrowLeft,
+  MapPin,
+  Plus,
+  Trash2,
+  Settings,
+  Zap,
+} from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/hooks/use-toast";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface ColumnMapping {
   csvColumn: string;
@@ -28,7 +38,7 @@ interface ETLConfigStep2Props {
   fileId: string;
   csvHeaders: string[];
   sqlSchema: string;
-  csvData: any[];
+  csvData: Record<string, unknown>[];
   onNext: (mappings: ColumnMapping[]) => void;
   onBack: () => void;
 }
@@ -46,6 +56,78 @@ const ETLConfigStep2 = ({
   const [transformationTexts, setTransformationTexts] = useState<
     Record<number, string>
   >({});
+
+  // Estados para carregamento de configuração
+  const { toast } = useToast();
+  const [loadedConfig, setLoadedConfig] = useState<{
+    fileId: string;
+    mappings: ColumnMapping[];
+    csvHeaders: string[];
+  } | null>(null);
+  const [configFile, setConfigFile] = useState<File | null>(null);
+  const [showConfigUpload, setShowConfigUpload] = useState(false);
+
+  // Função para carregar configuração de arquivo JSON
+  const handleConfigUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const text = await file.text();
+      const config = JSON.parse(text);
+
+      // Validar se é um arquivo de configuração válido
+      if (!config.fileId || !config.mappings || !config.csvHeaders) {
+        toast({
+          title: "❌ Arquivo inválido",
+          description: "Este não é um arquivo de configuração ETL válido.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Verificar se os mappings são válidos
+      if (!Array.isArray(config.mappings) || config.mappings.length === 0) {
+        toast({
+          title: "❌ Configuração inválida",
+          description: "O arquivo não contém mapeamentos válidos.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setLoadedConfig(config);
+      setConfigFile(file);
+
+      toast({
+        title: "✅ Configuração carregada!",
+        description: `Configuração para ${config.fileId} carregada com sucesso.`,
+      });
+    } catch (error) {
+      toast({
+        title: "❌ Erro ao carregar",
+        description: "Erro ao ler o arquivo de configuração.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Função para aplicar configuração carregada
+  const handleApplyConfig = () => {
+    if (!loadedConfig) return;
+
+    console.log("🚀 Aplicando configuração carregada aos mappings");
+    console.log("📋 Mappings da configuração:", loadedConfig.mappings);
+
+    setMappings(loadedConfig.mappings);
+
+    toast({
+      title: "✅ Configuração aplicada!",
+      description: `${loadedConfig.mappings.length} mapeamentos carregados.`,
+    });
+  };
 
   useEffect(() => {
     // Extract SQL columns from CREATE TABLE statement
@@ -99,7 +181,7 @@ const ETLConfigStep2 = ({
   const updateMapping = (
     index: number,
     field: keyof ColumnMapping,
-    value: any
+    value: string | boolean | Record<string, string>
   ) => {
     const newMappings = [...mappings];
     newMappings[index] = { ...newMappings[index], [field]: value };
@@ -190,6 +272,68 @@ const ETLConfigStep2 = ({
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
+          {/* Seção de Carregamento de Configuração */}
+          <div className="border-2 border-dashed border-primary/20 rounded-lg p-6 text-center space-y-4">
+            <div className="flex items-center justify-center space-x-2">
+              <Settings className="h-5 w-5 text-primary" />
+              <span className="font-medium">
+                Carregar Configuração Existente
+              </span>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Acelere o processo carregando uma configuração salva anteriormente
+            </p>
+
+            {!showConfigUpload && (
+              <Button
+                variant="outline"
+                onClick={() => setShowConfigUpload(true)}
+                className="gap-2"
+              >
+                <Zap className="h-4 w-4" />
+                Carregar Configuração
+              </Button>
+            )}
+
+            {showConfigUpload && (
+              <div className="space-y-3">
+                <input
+                  type="file"
+                  accept=".json"
+                  onChange={handleConfigUpload}
+                  className="block w-full text-sm text-muted-foreground file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
+                />
+
+                {loadedConfig && (
+                  <Alert>
+                    <Settings className="h-4 w-4" />
+                    <AlertDescription className="space-y-2">
+                      <p className="text-sm font-medium">
+                        ✅ Configuração Pronta
+                      </p>
+                      <p className="text-sm">
+                        <strong>Arquivo:</strong> {configFile?.name}
+                      </p>
+                      <p className="text-sm">
+                        <strong>Mapeamentos:</strong>{" "}
+                        {loadedConfig.mappings.length}
+                      </p>
+                      <Button
+                        onClick={handleApplyConfig}
+                        className="w-full mt-2"
+                        size="sm"
+                      >
+                        <Zap className="h-4 w-4 mr-2" />
+                        Aplicar Esta Configuração
+                      </Button>
+                    </AlertDescription>
+                  </Alert>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Mapeamentos Existentes */}
           {mappings.map((mapping, index) => (
             <div
               key={index}
@@ -388,24 +532,27 @@ NAO -> 0`}
                 </div>
               )}
 
-              {/* Validation options */}
-              {mapping.sqlColumn === "id_curral" && (
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    checked={mapping.validateInDimCurral || false}
-                    onChange={(e) =>
-                      updateMapping(
-                        index,
-                        "validateInDimCurral",
-                        e.target.checked
-                      )
-                    }
-                    className="rounded"
-                  />
-                  <Label className="text-sm">Validar em dim_curral</Label>
-                </div>
-              )}
+              {/* Validation options - Mostrar checkbox quando coluna contém "curral" */}
+              {mapping.sqlColumn &&
+                mapping.sqlColumn.toLowerCase().includes("curral") && (
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      checked={mapping.validateInDimCurral || false}
+                      onChange={(e) =>
+                        updateMapping(
+                          index,
+                          "validateInDimCurral",
+                          e.target.checked
+                        )
+                      }
+                      className="rounded"
+                    />
+                    <Label className="text-sm">
+                      Validar com dim_curral no banco
+                    </Label>
+                  </div>
+                )}
             </div>
           ))}
 

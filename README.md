@@ -69,7 +69,8 @@ pip install -r backend/requirements.txt
 ### 2. Iniciar Backend API
 
 ```bash
-python start_api.py
+cd c:\Projetos\ConectaBoi-ETL\backend\api
+python main.py
 ```
 
 Acesse: http://localhost:8000/docs
@@ -77,11 +78,12 @@ Acesse: http://localhost:8000/docs
 ### 3. Iniciar Frontend
 
 ```bash
+cd c:\Projetos\ConectaBoi-ETL
 npm install
 npm run dev
 ```
 
-Acesse: http://localhost:5173
+Acesse: http://localhost:8083
 
 ## 📊 Banco de Dados (Supabase)
 

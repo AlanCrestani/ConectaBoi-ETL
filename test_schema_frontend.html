@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Teste Schema API</title>
+  </head>
+  <body>
+    <h1>Teste da API de Schema</h1>
+    <button onclick="testSchema()">
+      Testar Schema etl_staging_03_desvio_distribuicao
+    </button>
+    <div id="result"></div>
+
+    <script>
+      async function testSchema() {
+        const resultDiv = document.getElementById("result");
+        resultDiv.innerHTML = "<p>Buscando schema...</p>";
+
+        try {
+          const response = await fetch(
+            "http://localhost:8000/etl/table-schema/etl_staging_03_desvio_distribuicao"
+          );
+          const data = await response.json();
+
+          resultDiv.innerHTML = `
+                    <h2>Resultado:</h2>
+                    <p><strong>Status:</strong> ${data.status}</p>
+                    <p><strong>Tabela:</strong> ${data.schema?.table_name}</p>
+                    <p><strong>Colunas:</strong> ${
+                      data.schema?.column_count
+                    }</p>
+                    <p><strong>Fonte:</strong> ${data.schema?.source}</p>
+                    <h3>Colunas encontradas:</h3>
+                    <ul>
+                        ${
+                          data.schema?.columns
+                            ?.map(
+                              (col) =>
+                                `<li>${col.column_name} (${col.data_type})</li>`
+                            )
+                            .join("") || "Nenhuma coluna"
+                        }
+                    </ul>
+                    <details>
+                        <summary>JSON completo</summary>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    </details>
+                `;
+        } catch (error) {
+          resultDiv.innerHTML = `<p style="color: red;">Erro: ${error.message}</p>`;
+        }
+      }
+    </script>
+  </body>
+</html>

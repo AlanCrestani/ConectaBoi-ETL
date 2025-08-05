@@ -40,7 +40,6 @@ ConectaBoi-ETL/
 ├── 📁 venv_etl/             # Ambiente virtual Python
 ├── .env                     # Variáveis de ambiente (protegido)
 ├── .gitignore              # Arquivos ignorados pelo Git
-├── start_api.py            # Script para inicializar API
 ├── package.json            # Dependências frontend
 ├── requirements.txt        # Dependências Python globais
 └── README.md               # Documentação principal
@@ -57,7 +56,8 @@ npm run dev
 ### 2. Backend (FastAPI)
 
 ```bash
-python start_api.py
+cd c:\Projetos\ConectaBoi-ETL\backend\api
+python main.py
 ```
 
 ### 3. Ambiente Virtual

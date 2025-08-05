@@ -12,6 +12,13 @@ interface SavedConfig {
     originalFileName: string;
     previewData: Record<string, unknown>[];
     columns: string[];
+    mappings?: Array<{
+      csvColumn: string;
+      sqlColumn: string;
+      type: string;
+      transformations?: Record<string, string>;
+      validateInDimCurral?: boolean;
+    }>;
   };
 }
 
