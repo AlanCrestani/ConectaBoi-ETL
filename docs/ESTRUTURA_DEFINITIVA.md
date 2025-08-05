@@ -49,16 +49,19 @@ ConectaBoi-ETL/
 ## 🚀 Como Executar
 
 ### 1. Frontend (React + Vite)
+
 ```bash
 npm run dev
 ```
 
 ### 2. Backend (FastAPI)
+
 ```bash
 python start_api.py
 ```
 
 ### 3. Ambiente Virtual
+
 ```bash
 # Ativar ambiente virtual
 .\venv_etl\Scripts\Activate.ps1
@@ -70,31 +73,36 @@ pip install -r backend\requirements.txt
 ## 🔧 Componentes Principais
 
 ### Backend API
+
 - **FastAPI**: Framework web moderno para Python
-- **Endpoints**: 
+- **Endpoints**:
   - `/etl/detect-structure` - Detecta estrutura CSV
   - `/etl/auto-mapping` - Gera mapeamento automático
   - `/etl/process` - Processa arquivos ETL
   - `/etl/tables` - Lista tabelas disponíveis
-  
+
 ### ETL Inteligente
+
 - **Detecção automática** de estrutura CSV
 - **Mapeamento inteligente** para tabelas Supabase
 - **Validação** de dados integrada
 - **Processamento em lote** otimizado
 
 ### Frontend React
+
 - **Interface** moderna e responsiva
 - **Upload** de arquivos com drag & drop
 - **Configuração** step-by-step do ETL
 - **Monitoramento** em tempo real
 
 ## 🔒 Segurança
+
 - Arquivo `.env` protegido pelo `.gitignore`
 - Chaves de API isoladas no backend
 - Validação rigorosa de entrada de dados
 
 ## 📊 Banco de Dados (Supabase)
+
 - **animais_staging**: Dados dos animais
 - **lotes_staging**: Informações dos lotes
 - **racoes_staging**: Dados das rações
@@ -102,6 +110,7 @@ pip install -r backend\requirements.txt
 - **desempenho_staging**: Performance dos animais
 
 ## 🛠️ Tecnologias
+
 - **Frontend**: React 18, TypeScript, Vite, Tailwind CSS
 - **Backend**: Python 3.12, FastAPI, Pandas
 - **Database**: PostgreSQL (Supabase)

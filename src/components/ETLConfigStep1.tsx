@@ -16,7 +16,12 @@ import { supabase } from "@/integrations/supabase/client";
 
 interface ETLConfigStep1Props {
   fileId: string;
-  onNext: (csvData: any[], headers: string[], sqlSchema: string) => void;
+  onNext: (
+    csvData: unknown[],
+    headers: string[],
+    sqlSchema: string,
+    additionalData?: Record<string, unknown>
+  ) => void;
 }
 
 const ETLConfigStep1 = ({ fileId, onNext }: ETLConfigStep1Props) => {
@@ -25,6 +30,14 @@ const ETLConfigStep1 = ({ fileId, onNext }: ETLConfigStep1Props) => {
   const [headers, setHeaders] = useState<string[]>([]);
   const [csvUploaded, setCsvUploaded] = useState(false);
   const [skipFirstLine, setSkipFirstLine] = useState(false);
+
+  // Upload state
+  const [fileInfo, setFileInfo] = useState<{
+    file_id: string;
+    original_filename: string;
+    structure_info: Record<string, unknown>;
+  } | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Schema related state
   const [sqlSchema, setSqlSchema] = useState("");
@@ -113,7 +126,9 @@ const ETLConfigStep1 = ({ fileId, onNext }: ETLConfigStep1Props) => {
     setSqlSchema(schema);
   };
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
@@ -126,58 +141,58 @@ const ETLConfigStep1 = ({ fileId, onNext }: ETLConfigStep1Props) => {
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const text = e.target?.result as string;
-      const lines = text.split("\n").filter((line) => line.trim());
+    try {
+      setIsLoading(true);
 
-      if (lines.length === 0) {
-        toast({
-          title: "Arquivo vazio",
-          description: "O arquivo CSV está vazio ou não possui dados válidos.",
-          variant: "destructive",
-        });
-        return;
-      }
+      const formData = new FormData();
+      formData.append("file", file);
 
-      // Parse CSV (simple implementation)
-      const parsedData = lines.map((line) => {
-        // Simple CSV parsing - in production, use a proper CSV parser
-        return line
-          .split(",")
-          .map((cell) => cell.trim().replace(/^"(.*)"$/, "$1"));
+      const response = await fetch("http://localhost:8000/upload-csv", {
+        method: "POST",
+        body: formData,
       });
 
-      // Aplicar lógica de skip da primeira linha se ativada
-      let processedData = parsedData;
-      if (skipFirstLine && parsedData.length > 1) {
-        processedData = parsedData.slice(1); // Remove primeira linha
-        toast({
-          title: "Primeira linha excluída",
-          description:
-            "A primeira linha foi removida e a segunda linha agora é o cabeçalho.",
-        });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || "Erro no upload do arquivo");
       }
 
-      const csvHeaders = processedData[0];
-      const csvRows = processedData
-        .slice(1)
-        .filter((row) => row.join("").length > 30); // Filter short rows
+      const result = await response.json();
 
-      setHeaders(csvHeaders);
-      setCsvData(csvRows);
+      // Armazenar informações do arquivo
+      setFileInfo({
+        file_id: result.file_id,
+        original_filename: result.original_filename,
+        structure_info: result.structure_info,
+      });
+
+      // Atualizar dados básicos para exibição
+      if (result.structure_info && result.structure_info.headers) {
+        setHeaders(result.structure_info.headers);
+        setCsvData(result.structure_info.sample_data || []);
+      }
+
+      // Atualizar estado para mostrar que arquivo foi carregado
       setCsvUploaded(true);
+
+      toast({
+        title: "Arquivo enviado com sucesso!",
+        description: `${file.name} foi carregado e está pronto para processamento.`,
+      });
 
       // Auto-detectar e sugerir schema baseado no fileId
       autoDetectSchema();
-
+    } catch (error) {
+      console.error("Erro no upload:", error);
       toast({
-        title: "Arquivo carregado",
-        description: `CSV carregado com ${csvRows.length} linhas e ${csvHeaders.length} colunas.`,
+        title: "Erro no upload",
+        description:
+          error instanceof Error ? error.message : "Erro desconhecido",
+        variant: "destructive",
       });
-    };
-
-    reader.readAsText(file);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const autoDetectSchema = () => {
@@ -194,17 +209,88 @@ const ETLConfigStep1 = ({ fileId, onNext }: ETLConfigStep1Props) => {
     }
   };
 
-  const handleNext = () => {
-    if (!csvUploaded || !sqlSchema.trim()) {
+  const handleNext = async () => {
+    if (!fileInfo?.file_id) {
       toast({
-        title: "Dados incompletos",
-        description: "Por favor, carregue o CSV e adicione o schema SQL.",
+        title: "Nenhum arquivo enviado",
+        description: "Por favor, faça upload de um arquivo CSV primeiro.",
         variant: "destructive",
       });
       return;
     }
 
-    onNext(csvData, headers, sqlSchema);
+    if (!sqlSchema.trim()) {
+      toast({
+        title: "Schema não definido",
+        description: "Por favor, defina o schema SQL da tabela.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+
+      toast({
+        title: "Processando...",
+        description: "Preparando arquivo para mapeamento. Aguarde...",
+      });
+
+      // Processar arquivo na Etapa 1
+      const response = await fetch("http://localhost:8000/process-step1", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          file_id: fileInfo.file_id,
+          skip_first_line: skipFirstLine,
+          selected_table: selectedTable || null,
+          schema_sql: sqlSchema,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || "Erro no processamento");
+      }
+
+      const result = await response.json();
+
+      if (result.success) {
+        toast({
+          title: "Processamento completo!",
+          description:
+            "Arquivo preparado com UTF-8, schema obtido e mapeamento gerado automaticamente.",
+        });
+
+        // Passar dados processados para próxima etapa
+        onNext(
+          result.processed_data.csv_data.sample_rows || [],
+          result.processed_data.csv_data.headers || [],
+          sqlSchema,
+          {
+            preprocessingResult: result.processed_data,
+            tableSchema: result.processed_data.table_schema,
+            autoMapping: result.processed_data.auto_mapping,
+            csvStructure: result.processed_data.csv_data,
+            fileInfo: fileInfo,
+          }
+        );
+      } else {
+        throw new Error(result.error || "Erro no processamento");
+      }
+    } catch (error) {
+      console.error("Erro no processamento:", error);
+      toast({
+        title: "Erro no processamento",
+        description:
+          error instanceof Error ? error.message : "Erro desconhecido",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const getFileDisplayName = (fileId: string) => {
@@ -397,11 +483,20 @@ CREATE TABLE etl_staging_${fileId} (
       <div className="flex justify-end">
         <Button
           onClick={handleNext}
-          disabled={!csvUploaded || !sqlSchema.trim()}
+          disabled={!fileInfo?.file_id || !sqlSchema.trim() || isLoading}
           className="flex items-center space-x-2"
         >
-          <span>Próximo: Mapeamento</span>
-          <ArrowRight className="h-4 w-4" />
+          {isLoading ? (
+            <>
+              <span>Processando...</span>
+              <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+            </>
+          ) : (
+            <>
+              <span>Próximo: Mapeamento</span>
+              <ArrowRight className="h-4 w-4" />
+            </>
+          )}
         </Button>
       </div>
     </div>

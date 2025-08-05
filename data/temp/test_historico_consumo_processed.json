@@ -1,0 +1,166 @@
+{
+  "csv_data": {
+    "headers": [
+      "linha_header_inutl",
+      "dados_antigos",
+      "remover"
+    ],
+    "sample_rows": [
+      {
+        "linha_header_inutl": "peso_entrada_kg",
+        "dados_antigos": "cms_realizado_kg",
+        "remover": "sexo"
+      },
+      {
+        "linha_header_inutl": "420.5",
+        "dados_antigos": "12.8",
+        "remover": "Macho"
+      },
+      {
+        "linha_header_inutl": "380.2",
+        "dados_antigos": "10.5",
+        "remover": "Femea"
+      },
+      {
+        "linha_header_inutl": "395.8",
+        "dados_antigos": "11.2",
+        "remover": "Macho"
+      }
+    ],
+    "total_rows": 4,
+    "encoding_used": "ascii",
+    "original_headers": [
+      "LINHA_HEADER_INUTL",
+      "DADOS_ANTIGOS",
+      "REMOVER"
+    ]
+  },
+  "table_schema": {
+    "table_name": "etl_staging_01_historico_consumo",
+    "columns": [
+      {
+        "column_name": "id",
+        "data_type": "bigint",
+        "is_nullable": "NO",
+        "column_default": "nextval(...)",
+        "ordinal_position": 1
+      },
+      {
+        "column_name": "id_curral",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "ordinal_position": 2
+      },
+      {
+        "column_name": "lote",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "ordinal_position": 3
+      },
+      {
+        "column_name": "data",
+        "data_type": "date",
+        "is_nullable": "NO",
+        "ordinal_position": 4
+      },
+      {
+        "column_name": "qtd_animais",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "ordinal_position": 5
+      },
+      {
+        "column_name": "dias_confinamento",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "ordinal_position": 6
+      },
+      {
+        "column_name": "peso_entrada_kg",
+        "data_type": "numeric",
+        "is_nullable": "YES",
+        "ordinal_position": 7
+      },
+      {
+        "column_name": "cms_previsto_kg",
+        "data_type": "numeric",
+        "is_nullable": "YES",
+        "ordinal_position": 8
+      },
+      {
+        "column_name": "cms_realizado_kg",
+        "data_type": "numeric",
+        "is_nullable": "YES",
+        "ordinal_position": 9
+      },
+      {
+        "column_name": "batch_id",
+        "data_type": "uuid",
+        "is_nullable": "YES",
+        "column_default": "gen_random_uuid()",
+        "ordinal_position": 10
+      },
+      {
+        "column_name": "uploaded_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()",
+        "ordinal_position": 11
+      },
+      {
+        "column_name": "processed",
+        "data_type": "boolean",
+        "is_nullable": "YES",
+        "column_default": "false",
+        "ordinal_position": 12
+      }
+    ],
+    "create_table_sql": "CREATE TABLE etl_staging_01_historico_consumo (\n  id BIGINT NOT NULL PRIMARY KEY,\n  id_curral TEXT NOT NULL,\n  lote TEXT,\n  data DATE NOT NULL,\n  qtd_animais INTEGER,\n  dias_confinamento INTEGER,\n  peso_entrada_kg NUMERIC,\n  cms_previsto_kg NUMERIC,\n  cms_realizado_kg NUMERIC,\n  batch_id UUID DEFAULT gen_random_uuid(),\n  uploaded_at TIMESTAMP WITH TIME ZONE DEFAULT now(),\n  processed BOOLEAN DEFAULT false\n);",
+    "column_count": 12,
+    "exists": true,
+    "column_mapping": {
+      "id": "ID",
+      "id_curral": "TEXT",
+      "lote": "TEXT",
+      "data": "DATE",
+      "qtd_animais": "NUMERIC",
+      "dias_confinamento": "AUTO_DETECT",
+      "peso_entrada_kg": "NUMERIC",
+      "cms_previsto_kg": "NUMERIC",
+      "cms_realizado_kg": "NUMERIC",
+      "batch_id": "ID",
+      "uploaded_at": "AUTO_DETECT",
+      "processed": "BOOLEAN"
+    },
+    "processed_at": "2025-08-04T21:33:25.724359"
+  },
+  "auto_mapping": [
+    {
+      "csv_column": "linha_header_inutl",
+      "db_column": null,
+      "confidence": 0.0,
+      "data_type": "NUMERIC",
+      "suggested": false
+    },
+    {
+      "csv_column": "dados_antigos",
+      "db_column": null,
+      "confidence": 0.0,
+      "data_type": "NUMERIC",
+      "suggested": false
+    },
+    {
+      "csv_column": "remover",
+      "db_column": null,
+      "confidence": 0.0,
+      "data_type": "TEXT",
+      "suggested": false
+    }
+  ],
+  "processing_info": {
+    "skip_first_line_applied": false,
+    "selected_table": "etl_staging_01_historico_consumo",
+    "processed_at": "2025-08-04T21:33:25.726367",
+    "file_path": "data\\temp\\test_historico_consumo.csv"
+  }
+}

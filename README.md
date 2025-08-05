@@ -5,18 +5,21 @@ Sistema ETL (Extract, Transform, Load) inteligente para processamento de dados d
 ## 🚀 Funcionalidades Principais
 
 ### 🧠 ETL Inteligente
+
 - **Detecção automática** de estrutura CSV
 - **Mapeamento inteligente** para tabelas do banco
 - **Validação automática** de tipos de dados
 - **Processamento em lote** otimizado
 
 ### 🎯 Interface Moderna
+
 - **Upload** de arquivos com drag & drop
 - **Configuração step-by-step** do ETL
 - **Monitoramento** em tempo real
 - **Relatórios** de processamento
 
 ### 🔧 API Robusta
+
 - **FastAPI** com documentação automática
 - **Endpoints RESTful** para todas as operações
 - **Tratamento de erros** avançado
@@ -29,6 +32,7 @@ Frontend React → FastAPI Backend → ETL Engine → Supabase PostgreSQL
 ```
 
 ### Stack Tecnológico
+
 - **Frontend**: React 18, TypeScript, Vite, Tailwind CSS, shadcn/ui
 - **Backend**: Python 3.12, FastAPI, Pandas, Uvicorn
 - **Database**: PostgreSQL (Supabase)
@@ -53,6 +57,7 @@ ConectaBoi-ETL/
 ## 🚀 Como Executar
 
 ### 1. Configurar Ambiente Python
+
 ```bash
 # Ativar ambiente virtual
 .env_etlcriptsctivate.ps1
@@ -62,21 +67,26 @@ pip install -r backend/requirements.txt
 ```
 
 ### 2. Iniciar Backend API
+
 ```bash
 python start_api.py
 ```
+
 Acesse: http://localhost:8000/docs
 
 ### 3. Iniciar Frontend
+
 ```bash
 npm install
 npm run dev
 ```
+
 Acesse: http://localhost:5173
 
 ## 📊 Banco de Dados (Supabase)
 
 ### Tabelas ETL
+
 - **animais_staging**: Dados dos animais em confinamento
 - **lotes_staging**: Informações dos lotes
 - **racoes_staging**: Dados das rações

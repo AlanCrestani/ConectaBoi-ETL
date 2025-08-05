@@ -28,6 +28,7 @@ class Settings(BaseSettings):
     log_file: str = "../../data/logs/app.log"
     
     # Configurações de arquivos
+    csv_source_directory: str = "C:/conectaboi_csv"
     upload_max_size: int = 50 * 1024 * 1024  # 50MB
     allowed_extensions: list = [".csv", ".xlsx", ".xls"]
     
