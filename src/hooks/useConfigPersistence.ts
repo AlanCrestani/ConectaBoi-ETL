@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 
 interface SavedConfig {
   id: string;
@@ -20,12 +20,12 @@ export const useConfigPersistence = () => {
 
   // Carregar configurações salvas
   useEffect(() => {
-    const saved = localStorage.getItem('etl_saved_configs');
+    const saved = localStorage.getItem("etl_saved_configs");
     if (saved) {
       try {
         setSavedConfigs(JSON.parse(saved));
       } catch (error) {
-        console.error('Erro ao carregar configurações salvas:', error);
+        console.error("Erro ao carregar configurações salvas:", error);
       }
     }
   }, []);
@@ -33,7 +33,7 @@ export const useConfigPersistence = () => {
   // Salvar nova configuração
   const saveConfig = (
     name: string,
-    config: SavedConfig['config'],
+    config: SavedConfig["config"],
     description?: string
   ): string => {
     const newConfig: SavedConfig = {
@@ -41,35 +41,35 @@ export const useConfigPersistence = () => {
       name,
       description,
       createdAt: new Date().toISOString(),
-      config
+      config,
     };
 
     const updatedConfigs = [...savedConfigs, newConfig];
     setSavedConfigs(updatedConfigs);
-    localStorage.setItem('etl_saved_configs', JSON.stringify(updatedConfigs));
-    
+    localStorage.setItem("etl_saved_configs", JSON.stringify(updatedConfigs));
+
     return newConfig.id;
   };
 
   // Carregar configuração específica
   const loadConfig = (id: string): SavedConfig | null => {
-    return savedConfigs.find(config => config.id === id) || null;
+    return savedConfigs.find((config) => config.id === id) || null;
   };
 
   // Deletar configuração
   const deleteConfig = (id: string) => {
-    const updatedConfigs = savedConfigs.filter(config => config.id !== id);
+    const updatedConfigs = savedConfigs.filter((config) => config.id !== id);
     setSavedConfigs(updatedConfigs);
-    localStorage.setItem('etl_saved_configs', JSON.stringify(updatedConfigs));
+    localStorage.setItem("etl_saved_configs", JSON.stringify(updatedConfigs));
   };
 
   // Atualizar configuração existente
   const updateConfig = (id: string, updates: Partial<SavedConfig>) => {
-    const updatedConfigs = savedConfigs.map(config =>
+    const updatedConfigs = savedConfigs.map((config) =>
       config.id === id ? { ...config, ...updates } : config
     );
     setSavedConfigs(updatedConfigs);
-    localStorage.setItem('etl_saved_configs', JSON.stringify(updatedConfigs));
+    localStorage.setItem("etl_saved_configs", JSON.stringify(updatedConfigs));
   };
 
   return {
@@ -77,6 +77,6 @@ export const useConfigPersistence = () => {
     saveConfig,
     loadConfig,
     deleteConfig,
-    updateConfig
+    updateConfig,
   };
 };

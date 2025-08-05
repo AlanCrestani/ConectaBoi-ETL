@@ -466,18 +466,18 @@ const ETLConfigStep3 = ({
       }
       return acc;
     }, {} as Record<string, string>),
-    removedColumns: csvHeaders.filter(header => 
-      !mappings.some(mapping => mapping.csvColumn === header)
+    removedColumns: csvHeaders.filter(
+      (header) => !mappings.some((mapping) => mapping.csvColumn === header)
     ),
     fileId,
     originalFileName: fileId,
-    previewData: safeData.data.slice(0, 10).map(row => 
+    previewData: safeData.data.slice(0, 10).map((row) =>
       row.reduce((acc, value, index) => {
         acc[csvHeaders[index] || `column_${index}`] = value;
         return acc;
       }, {} as Record<string, unknown>)
     ),
-    columns: csvHeaders
+    columns: csvHeaders,
   };
 
   return (
@@ -529,236 +529,240 @@ const ETLConfigStep3 = ({
         <TabsContent value="preview" className="space-y-6">
           {/* Data Preview Table */}
           <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <Eye className="h-5 w-5" />
-              <span>Dados do CSV</span>
-              <Badge variant="secondary">{validRowCount} linhas válidas</Badge>
-              {sortConfig.column !== null && (
-                <Badge variant="outline" className="text-xs">
-                  Ordenado por: {safeData.headers[sortConfig.column]}
-                  {sortConfig.direction === "desc" ? " ↓" : " ↑"}
-                </Badge>
-              )}
-            </div>
-            <div className="flex items-center space-x-2">
-              {sortConfig.column !== null && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() =>
-                    setSortConfig({ column: null, direction: null })
-                  }
-                  className="text-xs"
-                >
-                  Limpar ordenação
-                </Button>
-              )}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowPreview(!showPreview)}
-              >
-                {showPreview ? "Ocultar" : "Mostrar"} Preview
-              </Button>
-            </div>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="max-h-96 overflow-auto border border-border rounded-lg">
-            <table className="w-full text-sm">
-              <thead className="bg-muted/50 sticky top-0">
-                <tr>
-                  <th className="text-left p-2 w-12">Excluir</th>
-                  <th className="text-left p-2 w-12">
-                    <button
-                      onClick={() => handleSort("row-number")}
-                      className="flex items-center space-x-1 hover:bg-muted/50 rounded px-1 py-0.5 w-full text-left"
-                      title="Ordenar por número da linha"
-                    >
-                      <span>#</span>
-                      {getSortIcon("row-number")}
-                    </button>
-                  </th>
-                  {safeData.headers.slice(0, 6).map((header, idx) => (
-                    <th key={idx} className="text-left p-2 min-w-24">
-                      <button
-                        onClick={() => handleSort(idx)}
-                        className="flex items-center space-x-1 hover:bg-muted/50 rounded px-1 py-0.5 w-full text-left truncate"
-                        title={`Ordenar por ${header}`}
-                      >
-                        <span className="truncate">{header}</span>
-                        {getSortIcon(idx)}
-                      </button>
-                    </th>
-                  ))}
-                  {safeData.headers.length > 6 && (
-                    <th className="text-left p-2">
-                      +{safeData.headers.length - 6} mais...
-                    </th>
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <Eye className="h-5 w-5" />
+                  <span>Dados do CSV</span>
+                  <Badge variant="secondary">
+                    {validRowCount} linhas válidas
+                  </Badge>
+                  {sortConfig.column !== null && (
+                    <Badge variant="outline" className="text-xs">
+                      Ordenado por: {safeData.headers[sortConfig.column]}
+                      {sortConfig.direction === "desc" ? " ↓" : " ↑"}
+                    </Badge>
                   )}
-                </tr>
-              </thead>
-              <tbody>
-                {sortedDataWithIndices
-                  .slice(0, 20)
-                  .map((item, displayIndex) => {
-                    const { row, originalIndex } = item;
-                    return (
-                      <tr
-                        key={`${originalIndex}-${displayIndex}`}
-                        className={`border-t border-border ${
-                          excludedRows.has(originalIndex)
-                            ? "bg-destructive/5 text-muted-foreground"
-                            : "hover:bg-muted/30"
-                        }`}
-                      >
-                        <td className="p-2">
-                          <Checkbox
-                            checked={excludedRows.has(originalIndex)}
-                            onCheckedChange={() =>
-                              toggleRowExclusion(originalIndex)
-                            }
-                          />
-                        </td>
-                        <td className="p-2 text-xs text-muted-foreground">
-                          {originalIndex + 1}
-                        </td>
-                        {row
-                          .slice(0, 6)
-                          .map((cell: string, cellIdx: number) => (
-                            <td
-                              key={cellIdx}
-                              className="p-2 max-w-32 truncate"
-                              title={cell}
-                            >
-                              {cell}
+                </div>
+                <div className="flex items-center space-x-2">
+                  {sortConfig.column !== null && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() =>
+                        setSortConfig({ column: null, direction: null })
+                      }
+                      className="text-xs"
+                    >
+                      Limpar ordenação
+                    </Button>
+                  )}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowPreview(!showPreview)}
+                  >
+                    {showPreview ? "Ocultar" : "Mostrar"} Preview
+                  </Button>
+                </div>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="max-h-96 overflow-auto border border-border rounded-lg">
+                <table className="w-full text-sm">
+                  <thead className="bg-muted/50 sticky top-0">
+                    <tr>
+                      <th className="text-left p-2 w-12">Excluir</th>
+                      <th className="text-left p-2 w-12">
+                        <button
+                          onClick={() => handleSort("row-number")}
+                          className="flex items-center space-x-1 hover:bg-muted/50 rounded px-1 py-0.5 w-full text-left"
+                          title="Ordenar por número da linha"
+                        >
+                          <span>#</span>
+                          {getSortIcon("row-number")}
+                        </button>
+                      </th>
+                      {safeData.headers.slice(0, 6).map((header, idx) => (
+                        <th key={idx} className="text-left p-2 min-w-24">
+                          <button
+                            onClick={() => handleSort(idx)}
+                            className="flex items-center space-x-1 hover:bg-muted/50 rounded px-1 py-0.5 w-full text-left truncate"
+                            title={`Ordenar por ${header}`}
+                          >
+                            <span className="truncate">{header}</span>
+                            {getSortIcon(idx)}
+                          </button>
+                        </th>
+                      ))}
+                      {safeData.headers.length > 6 && (
+                        <th className="text-left p-2">
+                          +{safeData.headers.length - 6} mais...
+                        </th>
+                      )}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {sortedDataWithIndices
+                      .slice(0, 20)
+                      .map((item, displayIndex) => {
+                        const { row, originalIndex } = item;
+                        return (
+                          <tr
+                            key={`${originalIndex}-${displayIndex}`}
+                            className={`border-t border-border ${
+                              excludedRows.has(originalIndex)
+                                ? "bg-destructive/5 text-muted-foreground"
+                                : "hover:bg-muted/30"
+                            }`}
+                          >
+                            <td className="p-2">
+                              <Checkbox
+                                checked={excludedRows.has(originalIndex)}
+                                onCheckedChange={() =>
+                                  toggleRowExclusion(originalIndex)
+                                }
+                              />
                             </td>
-                          ))}
-                        {row.length > 6 && (
-                          <td className="p-2 text-xs text-muted-foreground">
-                            +{row.length - 6} cols
-                          </td>
-                        )}
-                      </tr>
-                    );
-                  })}
-              </tbody>
-            </table>
-          </div>
+                            <td className="p-2 text-xs text-muted-foreground">
+                              {originalIndex + 1}
+                            </td>
+                            {row
+                              .slice(0, 6)
+                              .map((cell: string, cellIdx: number) => (
+                                <td
+                                  key={cellIdx}
+                                  className="p-2 max-w-32 truncate"
+                                  title={cell}
+                                >
+                                  {cell}
+                                </td>
+                              ))}
+                            {row.length > 6 && (
+                              <td className="p-2 text-xs text-muted-foreground">
+                                +{row.length - 6} cols
+                              </td>
+                            )}
+                          </tr>
+                        );
+                      })}
+                  </tbody>
+                </table>
+              </div>
 
-          <div className="mt-4 flex flex-wrap gap-2">
+              <div className="mt-4 flex flex-wrap gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setExcludedRows(new Set([0, ...shortRows]))}
+                  className="flex items-center space-x-1"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  <span>Auto-exclusão</span>
+                </Button>
+
+                <div className="text-sm text-muted-foreground flex items-center">
+                  • {excludedRows.size} linhas excluídas • {validRowCount}{" "}
+                  linhas para processar
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Transformed Data Preview */}
+          {showPreview && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <CheckCircle className="h-5 w-5 text-success" />
+                  <span>Preview dos Dados Transformados</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="bg-muted/30 rounded-lg p-4">
+                  <p className="text-sm text-muted-foreground mb-3">
+                    Primeira linha válida após transformação:
+                  </p>
+
+                  <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+                    {Object.entries(previewData).map(([column, value]) => {
+                      const mapping = mappings.find(
+                        (m) => m.sqlColumn === column
+                      );
+                      const getTypeColor = () => {
+                        switch (mapping?.type) {
+                          case "derived":
+                            return "text-accent border-accent/20 bg-accent/5";
+                          case "fixed":
+                            return "text-secondary border-secondary/20 bg-secondary/5";
+                          default:
+                            return "text-primary border-primary/20 bg-primary/5";
+                        }
+                      };
+
+                      return (
+                        <div
+                          key={column}
+                          className={`border rounded-lg p-3 ${getTypeColor()}`}
+                        >
+                          <div className="font-medium text-sm">{column}</div>
+                          <div className="text-xs opacity-75 mt-1">
+                            {mapping?.type === "fixed"
+                              ? "Valor fixo"
+                              : mapping?.type === "derived"
+                              ? `Derivado de: ${mapping.derivedFrom}`
+                              : `CSV: ${mapping?.csvColumn}`}
+                          </div>
+                          <div className="font-mono text-sm mt-2 bg-background/50 rounded px-2 py-1">
+                            {String(value)}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          <div className="flex justify-between">
             <Button
               variant="outline"
-              size="sm"
-              onClick={() => setExcludedRows(new Set([0, ...shortRows]))}
-              className="flex items-center space-x-1"
+              onClick={onBack}
+              className="flex items-center space-x-2"
             >
-              <Trash2 className="h-4 w-4" />
-              <span>Auto-exclusão</span>
+              <ArrowLeft className="h-4 w-4" />
+              <span>Voltar</span>
             </Button>
 
-            <div className="text-sm text-muted-foreground flex items-center">
-              • {excludedRows.size} linhas excluídas • {validRowCount} linhas
-              para processar
+            <div className="flex space-x-2">
+              <Button
+                variant="outline"
+                onClick={validateData}
+                className="flex items-center space-x-2"
+              >
+                <CheckCircle2 className="h-4 w-4" />
+                <span>Validar</span>
+              </Button>
+
+              <Button
+                variant="outline"
+                onClick={downloadConfig}
+                className="flex items-center space-x-2"
+              >
+                <Download className="h-4 w-4" />
+                <span>Salvar Config</span>
+              </Button>
+
+              <Button
+                onClick={handleNextClick}
+                className="flex items-center space-x-2"
+              >
+                <span>Gerar Script ETL</span>
+                <ArrowRight className="h-4 w-4" />
+              </Button>
             </div>
           </div>
-        </CardContent>
-      </Card>
-
-      {/* Transformed Data Preview */}
-      {showPreview && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <CheckCircle className="h-5 w-5 text-success" />
-              <span>Preview dos Dados Transformados</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="bg-muted/30 rounded-lg p-4">
-              <p className="text-sm text-muted-foreground mb-3">
-                Primeira linha válida após transformação:
-              </p>
-
-              <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-                {Object.entries(previewData).map(([column, value]) => {
-                  const mapping = mappings.find((m) => m.sqlColumn === column);
-                  const getTypeColor = () => {
-                    switch (mapping?.type) {
-                      case "derived":
-                        return "text-accent border-accent/20 bg-accent/5";
-                      case "fixed":
-                        return "text-secondary border-secondary/20 bg-secondary/5";
-                      default:
-                        return "text-primary border-primary/20 bg-primary/5";
-                    }
-                  };
-
-                  return (
-                    <div
-                      key={column}
-                      className={`border rounded-lg p-3 ${getTypeColor()}`}
-                    >
-                      <div className="font-medium text-sm">{column}</div>
-                      <div className="text-xs opacity-75 mt-1">
-                        {mapping?.type === "fixed"
-                          ? "Valor fixo"
-                          : mapping?.type === "derived"
-                          ? `Derivado de: ${mapping.derivedFrom}`
-                          : `CSV: ${mapping?.csvColumn}`}
-                      </div>
-                      <div className="font-mono text-sm mt-2 bg-background/50 rounded px-2 py-1">
-                        {String(value)}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      <div className="flex justify-between">
-        <Button
-          variant="outline"
-          onClick={onBack}
-          className="flex items-center space-x-2"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          <span>Voltar</span>
-        </Button>
-
-        <div className="flex space-x-2">
-          <Button
-            variant="outline"
-            onClick={validateData}
-            className="flex items-center space-x-2"
-          >
-            <CheckCircle2 className="h-4 w-4" />
-            <span>Validar</span>
-          </Button>
-
-          <Button
-            variant="outline"
-            onClick={downloadConfig}
-            className="flex items-center space-x-2"
-          >
-            <Download className="h-4 w-4" />
-            <span>Salvar Config</span>
-          </Button>
-
-          <Button
-            onClick={handleNextClick}
-            className="flex items-center space-x-2"
-          >
-            <span>Gerar Script ETL</span>
-            <ArrowRight className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
         </TabsContent>
 
         <TabsContent value="quick-etl" className="space-y-6">
@@ -766,7 +770,7 @@ const ETLConfigStep3 = ({
         </TabsContent>
 
         <TabsContent value="configs" className="space-y-6">
-          <ConfigManager 
+          <ConfigManager
             currentConfig={currentConfig}
             onLoadConfig={handleLoadConfig}
           />

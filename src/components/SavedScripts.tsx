@@ -1,19 +1,25 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { 
-  FileText, 
-  Play, 
-  Download, 
-  RefreshCw, 
+import React, { useState, useEffect, useCallback } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  FileText,
+  Play,
+  Download,
+  RefreshCw,
   Calendar,
   CheckCircle,
   AlertCircle,
-  Copy
-} from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+  Copy,
+} from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 interface SavedScript {
   name: string;
@@ -40,17 +46,16 @@ export function SavedScripts() {
   const loadScripts = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:8000/scripts/list');
-      
+      const response = await fetch("http://localhost:8000/scripts/list");
+
       if (!response.ok) {
-        throw new Error('Erro ao carregar scripts');
+        throw new Error("Erro ao carregar scripts");
       }
 
       const result = await response.json();
       setScripts(result.scripts || []);
-      
     } catch (error) {
-      console.error('Erro ao carregar scripts:', error);
+      console.error("Erro ao carregar scripts:", error);
       toast({
         title: "Erro",
         description: "Não foi possível carregar a lista de scripts salvos.",
@@ -75,12 +80,12 @@ export function SavedScripts() {
 
   const formatDate = (dateString: string) => {
     try {
-      return new Date(dateString).toLocaleDateString('pt-BR', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
+      return new Date(dateString).toLocaleDateString("pt-BR", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
       });
     } catch {
       return dateString;
@@ -129,14 +134,19 @@ export function SavedScripts() {
             <div className="text-center text-gray-500">
               <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
               <p>Nenhum script salvo ainda.</p>
-              <p className="text-sm">Use o Quick ETL para salvar seus primeiros scripts.</p>
+              <p className="text-sm">
+                Use o Quick ETL para salvar seus primeiros scripts.
+              </p>
             </div>
           </CardContent>
         </Card>
       ) : (
         <div className="grid gap-4">
           {scripts.map((script) => (
-            <Card key={script.name} className="hover:shadow-md transition-shadow">
+            <Card
+              key={script.name}
+              className="hover:shadow-md transition-shadow"
+            >
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-base">{script.name}</CardTitle>
@@ -152,7 +162,7 @@ export function SavedScripts() {
               <CardContent className="space-y-4">
                 {/* Status dos Arquivos */}
                 <div className="flex items-center space-x-2">
-                  <Badge 
+                  <Badge
                     variant={script.exists.script ? "default" : "destructive"}
                     className="text-xs"
                   >
@@ -163,7 +173,7 @@ export function SavedScripts() {
                     )}
                     Script
                   </Badge>
-                  <Badge 
+                  <Badge
                     variant={script.exists.config ? "default" : "destructive"}
                     className="text-xs"
                   >
@@ -174,8 +184,10 @@ export function SavedScripts() {
                     )}
                     Config
                   </Badge>
-                  <Badge 
-                    variant={script.exists.executable ? "default" : "destructive"}
+                  <Badge
+                    variant={
+                      script.exists.executable ? "default" : "destructive"
+                    }
                     className="text-xs"
                   >
                     {script.exists.executable ? (
@@ -215,11 +227,13 @@ export function SavedScripts() {
                     <Download className="h-4 w-4 mr-2" />
                     Download
                   </Button>
-                  
+
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => copyToClipboard(`python "${script.paths.executable}"`)}
+                    onClick={() =>
+                      copyToClipboard(`python "${script.paths.executable}"`)
+                    }
                     disabled={!script.exists.executable}
                   >
                     <Copy className="h-4 w-4 mr-2" />
@@ -232,7 +246,8 @@ export function SavedScripts() {
                   <Alert>
                     <Play className="h-4 w-4" />
                     <AlertDescription>
-                      Para executar este script, abra um terminal na pasta do projeto e execute:
+                      Para executar este script, abra um terminal na pasta do
+                      projeto e execute:
                       <code className="block mt-1 p-2 bg-gray-100 rounded text-sm">
                         python "{script.paths.executable}"
                       </code>

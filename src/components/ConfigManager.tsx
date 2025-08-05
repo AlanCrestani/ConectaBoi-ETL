@@ -1,32 +1,38 @@
-import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogDescription, 
-  DialogHeader, 
-  DialogTitle, 
+import React, { useState } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
   DialogTrigger,
-  DialogFooter 
-} from '@/components/ui/dialog';
-import { 
-  AlertDialog, 
-  AlertDialogAction, 
-  AlertDialogCancel, 
-  AlertDialogContent, 
-  AlertDialogDescription, 
-  AlertDialogFooter, 
-  AlertDialogHeader, 
-  AlertDialogTitle, 
-  AlertDialogTrigger 
-} from '@/components/ui/alert-dialog';
-import { useConfigPersistence } from '@/hooks/useConfigPersistence';
-import { Save, Upload, Trash2, Calendar, FileText } from 'lucide-react';
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { useConfigPersistence } from "@/hooks/useConfigPersistence";
+import { Save, Upload, Trash2, Calendar, FileText } from "lucide-react";
 
 interface SavedConfigData {
   transformations: Record<string, string>;
@@ -42,19 +48,27 @@ interface ConfigManagerProps {
   onLoadConfig: (config: SavedConfigData) => void;
 }
 
-export function ConfigManager({ currentConfig, onLoadConfig }: ConfigManagerProps) {
-  const { savedConfigs, saveConfig, loadConfig, deleteConfig } = useConfigPersistence();
+export function ConfigManager({
+  currentConfig,
+  onLoadConfig,
+}: ConfigManagerProps) {
+  const { savedConfigs, saveConfig, loadConfig, deleteConfig } =
+    useConfigPersistence();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [configName, setConfigName] = useState('');
-  const [configDescription, setConfigDescription] = useState('');
+  const [configName, setConfigName] = useState("");
+  const [configDescription, setConfigDescription] = useState("");
 
   const handleSaveConfig = () => {
     if (!currentConfig || !configName.trim()) return;
 
-    const configId = saveConfig(configName.trim(), currentConfig, configDescription.trim());
+    const configId = saveConfig(
+      configName.trim(),
+      currentConfig,
+      configDescription.trim()
+    );
     setIsDialogOpen(false);
-    setConfigName('');
-    setConfigDescription('');
+    setConfigName("");
+    setConfigDescription("");
   };
 
   const handleLoadConfig = (configId: string) => {
@@ -65,12 +79,12 @@ export function ConfigManager({ currentConfig, onLoadConfig }: ConfigManagerProp
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+    return new Date(dateString).toLocaleDateString("pt-BR", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
@@ -117,10 +131,7 @@ export function ConfigManager({ currentConfig, onLoadConfig }: ConfigManagerProp
               <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
                 Cancelar
               </Button>
-              <Button 
-                onClick={handleSaveConfig}
-                disabled={!configName.trim()}
-              >
+              <Button onClick={handleSaveConfig} disabled={!configName.trim()}>
                 Salvar
               </Button>
             </DialogFooter>
@@ -147,7 +158,10 @@ export function ConfigManager({ currentConfig, onLoadConfig }: ConfigManagerProp
                   key={config.id}
                   className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50"
                 >
-                  <div className="flex-1 cursor-pointer" onClick={() => handleLoadConfig(config.id)}>
+                  <div
+                    className="flex-1 cursor-pointer"
+                    onClick={() => handleLoadConfig(config.id)}
+                  >
                     <div className="flex items-center justify-between">
                       <h4 className="font-medium">{config.name}</h4>
                       <div className="flex items-center text-sm text-gray-500">
@@ -156,14 +170,21 @@ export function ConfigManager({ currentConfig, onLoadConfig }: ConfigManagerProp
                       </div>
                     </div>
                     {config.description && (
-                      <p className="text-sm text-gray-600 mt-1">{config.description}</p>
+                      <p className="text-sm text-gray-600 mt-1">
+                        {config.description}
+                      </p>
                     )}
                     <div className="flex items-center mt-2 space-x-2">
                       <Badge variant="secondary">
-                        {Object.keys(config.config.transformations || {}).length} transformações
+                        {
+                          Object.keys(config.config.transformations || {})
+                            .length
+                        }{" "}
+                        transformações
                       </Badge>
                       <Badge variant="outline">
-                        {config.config.removedColumns?.length || 0} colunas removidas
+                        {config.config.removedColumns?.length || 0} colunas
+                        removidas
                       </Badge>
                       <Badge variant="outline">
                         Arquivo: {config.config.originalFileName}
@@ -187,15 +208,19 @@ export function ConfigManager({ currentConfig, onLoadConfig }: ConfigManagerProp
                       </AlertDialogTrigger>
                       <AlertDialogContent>
                         <AlertDialogHeader>
-                          <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
+                          <AlertDialogTitle>
+                            Confirmar Exclusão
+                          </AlertDialogTitle>
                           <AlertDialogDescription>
-                            Tem certeza que deseja excluir a configuração "{config.name}"? 
-                            Esta ação não pode ser desfeita.
+                            Tem certeza que deseja excluir a configuração "
+                            {config.name}"? Esta ação não pode ser desfeita.
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
                           <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                          <AlertDialogAction onClick={() => deleteConfig(config.id)}>
+                          <AlertDialogAction
+                            onClick={() => deleteConfig(config.id)}
+                          >
                             Excluir
                           </AlertDialogAction>
                         </AlertDialogFooter>
@@ -215,7 +240,9 @@ export function ConfigManager({ currentConfig, onLoadConfig }: ConfigManagerProp
             <div className="text-center text-gray-500">
               <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
               <p>Nenhuma configuração salva ainda.</p>
-              <p className="text-sm">Configure seu ETL e salve para reutilizar depois.</p>
+              <p className="text-sm">
+                Configure seu ETL e salve para reutilizar depois.
+              </p>
             </div>
           </CardContent>
         </Card>

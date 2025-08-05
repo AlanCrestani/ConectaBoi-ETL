@@ -76,8 +76,6 @@ export function QuickETL({ savedConfig }: QuickETLProps) {
       setSelectedFile(file);
       setStatus("idle");
       setResultMessage("");
-      setProcessedData([]);
-      setExcludedRows(new Set());
     }
   };
 
@@ -114,16 +112,13 @@ export function QuickETL({ savedConfig }: QuickETLProps) {
         excluded_rows: [],
       };
 
-      const etlResponse = await fetch(
-        "http://localhost:8000/etl/process-quick",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(etlConfig),
-        }
-      );
+      const etlResponse = await fetch("http://localhost:8000/etl/process", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(etlConfig),
+      });
 
       if (!etlResponse.ok) {
         throw new Error("Erro no processamento ETL");
@@ -156,12 +151,10 @@ export function QuickETL({ savedConfig }: QuickETLProps) {
     if (!processedData.length) return;
 
     setProcessing(true);
-
+    
     try {
-      // Usar apenas os dados visíveis (não excluídos)
-      const finalData = processedData.filter(
-        (_, index) => !excludedRows.has(index)
-      );
+      // Filtrar dados excluindo as linhas selecionadas
+      const finalData = processedData.filter((_, index) => !excludedRows.has(index));
 
       const supabaseResponse = await fetch(
         "http://localhost:8000/supabase/upload",
@@ -202,69 +195,17 @@ export function QuickETL({ savedConfig }: QuickETLProps) {
       setProcessing(false);
     }
   };
-
-  const handleRowToggle = (index: number) => {
-    const newExcludedRows = new Set(excludedRows);
-    if (newExcludedRows.has(index)) {
-      newExcludedRows.delete(index);
-    } else {
-      newExcludedRows.add(index);
+    } catch (error) {
+      console.error("Erro no processo ETL:", error);
+      setStatus("error");
+      setResultMessage(
+        `❌ Erro: ${
+          error instanceof Error ? error.message : "Erro desconhecido"
+        }`
+      );
+    } finally {
+      setProcessing(false);
     }
-    setExcludedRows(newExcludedRows);
-  };
-
-  const handleSort = (column: string | "row-number") => {
-    let direction: "asc" | "desc" = "asc";
-    if (sortConfig.column === column && sortConfig.direction === "asc") {
-      direction = "desc";
-    }
-    setSortConfig({ column, direction });
-  };
-
-  const getSortedData = () => {
-    if (!processedData.length) return [];
-
-    const dataWithIndex = processedData.map((row, index) => ({
-      ...row,
-      originalIndex: index,
-    }));
-
-    // Filtrar dados excluídos da visualização
-    const filteredData = dataWithIndex.filter(
-      (row) => !excludedRows.has(row.originalIndex)
-    );
-
-    if (!sortConfig.column || !sortConfig.direction) {
-      return filteredData;
-    }
-
-    return [...filteredData].sort((a, b) => {
-      if (sortConfig.column === "row-number") {
-        const aVal = a.originalIndex;
-        const bVal = b.originalIndex;
-        return sortConfig.direction === "asc" ? aVal - bVal : bVal - aVal;
-      }
-
-      const aVal = String(a[sortConfig.column] || "");
-      const bVal = String(b[sortConfig.column] || "");
-
-      if (sortConfig.direction === "asc") {
-        return aVal.localeCompare(bVal);
-      } else {
-        return bVal.localeCompare(aVal);
-      }
-    });
-  };
-
-  const getSortIcon = (column: string | "row-number") => {
-    if (sortConfig.column !== column) {
-      return <ChevronsUpDown className="h-4 w-4 opacity-50" />;
-    }
-    return sortConfig.direction === "asc" ? (
-      <ChevronUp className="h-4 w-4" />
-    ) : (
-      <ChevronDown className="h-4 w-4" />
-    );
   };
 
   const generatePythonScript = () => {
@@ -407,9 +348,6 @@ if __name__ == "__main__":
     );
   }
 
-  const sortedData = getSortedData();
-  const columns = processedData.length > 0 ? Object.keys(processedData[0]) : [];
-
   return (
     <Card>
       <CardHeader>
@@ -418,8 +356,8 @@ if __name__ == "__main__":
           Quick ETL - Aplicação Rápida
         </CardTitle>
         <CardDescription>
-          Aplique a configuração salva em um novo arquivo e revise antes do
-          upload
+          Aplique a configuração salva em um novo arquivo e faça upload direto
+          para o Supabase
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -484,13 +422,13 @@ if __name__ == "__main__":
         {status !== "idle" && !processing && (
           <Alert
             className={
-              status === "success" || status === "processed"
+              status === "success"
                 ? "border-green-200 bg-green-50"
                 : "border-red-200 bg-red-50"
             }
           >
             <div className="flex items-center">
-              {status === "success" || status === "processed" ? (
+              {status === "success" ? (
                 <CheckCircle className="h-4 w-4 text-green-600" />
               ) : (
                 <AlertCircle className="h-4 w-4 text-red-600" />
@@ -502,206 +440,59 @@ if __name__ == "__main__":
           </Alert>
         )}
 
-        {/* Tabela de Dados Processados */}
-        {status === "processed" && sortedData.length > 0 && (
-          <div className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <Eye className="h-5 w-5 mr-2" />
-                    Dados Processados
-                  </div>
-                  <Badge variant="secondary">
-                    {sortedData.length} registros visíveis
-                  </Badge>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="max-h-96 overflow-auto border rounded">
-                  <table className="w-full text-sm">
-                    <thead className="bg-gray-50 sticky top-0">
-                      <tr>
-                        <th className="px-2 py-2 text-left border-b">
-                          <div className="flex items-center space-x-1">
-                            <span>Excluir</span>
-                          </div>
-                        </th>
-                        <th
-                          className="px-2 py-2 text-left border-b cursor-pointer hover:bg-gray-100"
-                          onClick={() => handleSort("row-number")}
-                        >
-                          <div className="flex items-center space-x-1">
-                            <span>#</span>
-                            {getSortIcon("row-number")}
-                          </div>
-                        </th>
-                        {columns
-                          .filter((col) => col !== "originalIndex")
-                          .map((column) => (
-                            <th
-                              key={column}
-                              className="px-2 py-2 text-left border-b cursor-pointer hover:bg-gray-100"
-                              onClick={() => handleSort(column)}
-                            >
-                              <div className="flex items-center space-x-1">
-                                <span>{column}</span>
-                                {getSortIcon(column)}
-                              </div>
-                            </th>
-                          ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {sortedData.map((row, displayIndex) => {
-                        const originalIndex = row.originalIndex as number;
-
-                        return (
-                          <tr
-                            key={originalIndex}
-                            className="border-b hover:bg-gray-50"
-                          >
-                            <td className="px-2 py-1 border-r">
-                              <Checkbox
-                                checked={false}
-                                onCheckedChange={() =>
-                                  handleRowToggle(originalIndex)
-                                }
-                              />
-                            </td>
-                            <td className="px-2 py-1 border-r font-mono text-xs">
-                              {originalIndex + 1}
-                            </td>
-                            {columns
-                              .filter((col) => col !== "originalIndex")
-                              .map((column) => (
-                                <td key={column} className="px-2 py-1 border-r">
-                                  {String(row[column] || "")}
-                                </td>
-                              ))}
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
+        {/* Dados Processados Preview */}
+        {processedData.length > 0 && status === "success" && (
+          <div className="mt-4">
+            <h4 className="font-medium mb-2">Preview dos Dados Processados:</h4>
+            <div className="max-h-40 overflow-auto border rounded">
+              <table className="w-full text-xs">
+                <thead className="bg-gray-50">
+                  <tr>
+                    {Object.keys(processedData[0] || {}).map((key) => (
+                      <th key={key} className="px-2 py-1 text-left border-b">
+                        {key}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {processedData.slice(0, 3).map((row, index) => (
+                    <tr key={index} className="border-b">
+                      {Object.values(row).map((value, colIndex) => (
+                        <td key={colIndex} className="px-2 py-1 border-r">
+                          {String(value)}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {processedData.length > 3 && (
+                <div className="p-2 text-center text-gray-500 text-xs">
+                  ... e mais {processedData.length - 3} registros
                 </div>
-              </CardContent>
-            </Card>
-
-            {/* Linhas Excluídas */}
-            {excludedRows.size > 0 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <Trash2 className="h-5 w-5 mr-2 text-red-500" />
-                      Linhas Excluídas
-                    </div>
-                    <Badge variant="destructive">
-                      {excludedRows.size} registros excluídos
-                    </Badge>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="max-h-48 overflow-auto border rounded bg-red-50">
-                    <table className="w-full text-sm">
-                      <thead className="bg-red-100 sticky top-0">
-                        <tr>
-                          <th className="px-2 py-2 text-left border-b">
-                            <span>Restaurar</span>
-                          </th>
-                          <th className="px-2 py-2 text-left border-b">#</th>
-                          {columns
-                            .filter((col) => col !== "originalIndex")
-                            .map((column) => (
-                              <th
-                                key={column}
-                                className="px-2 py-2 text-left border-b"
-                              >
-                                {column}
-                              </th>
-                            ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {Array.from(excludedRows).map((excludedIndex) => {
-                          const row = processedData[excludedIndex];
-                          if (!row) return null;
-
-                          return (
-                            <tr
-                              key={excludedIndex}
-                              className="border-b opacity-75"
-                            >
-                              <td className="px-2 py-1 border-r">
-                                <Checkbox
-                                  checked={true}
-                                  onCheckedChange={() =>
-                                    handleRowToggle(excludedIndex)
-                                  }
-                                />
-                              </td>
-                              <td className="px-2 py-1 border-r font-mono text-xs">
-                                {excludedIndex + 1}
-                              </td>
-                              {columns
-                                .filter((col) => col !== "originalIndex")
-                                .map((column) => (
-                                  <td
-                                    key={column}
-                                    className="px-2 py-1 border-r"
-                                  >
-                                    {String(row[column] || "")}
-                                  </td>
-                                ))}
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+              )}
+            </div>
           </div>
         )}
 
         {/* Botões de Ação */}
         <div className="flex space-x-4">
-          {status !== "processed" ? (
-            <Button
-              onClick={processETL}
-              disabled={!selectedFile || processing}
-              className="flex-1"
-              size="lg"
-            >
-              {processing ? (
-                <>Processando...</>
-              ) : (
-                <>
-                  <Play className="h-4 w-4 mr-2" />
-                  Processar Dados
-                </>
-              )}
-            </Button>
-          ) : (
-            <Button
-              onClick={uploadToSupabase}
-              disabled={processing || processedData.length === 0}
-              className="flex-1"
-              size="lg"
-            >
-              {processing ? (
-                <>Enviando...</>
-              ) : (
-                <>
-                  <Database className="h-4 w-4 mr-2" />
-                  Enviar para Supabase (
-                  {processedData.length - excludedRows.size} registros)
-                </>
-              )}
-            </Button>
-          )}
+          <Button
+            onClick={processETL}
+            disabled={!selectedFile || processing}
+            className="flex-1"
+            size="lg"
+          >
+            {processing ? (
+              <>Processando...</>
+            ) : (
+              <>
+                <Play className="h-4 w-4 mr-2" />
+                Processar e Enviar para Supabase
+              </>
+            )}
+          </Button>
 
           <Dialog open={saveScriptMode} onOpenChange={setSaveScriptMode}>
             <DialogTrigger asChild>

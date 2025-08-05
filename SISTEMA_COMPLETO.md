@@ -33,11 +33,13 @@ Na tela "Preview e Validação", aba "Quick ETL":
 ### 3. Scripts Python Independentes
 
 #### Geração de Scripts:
+
 1. **Na aba Quick ETL**, clique "Salvar Script"
 2. **Defina nome e descrição** do script
 3. **Script será salvo** em `generated_scripts/`
 
 #### Execução de Scripts:
+
 1. **Visualize scripts** na aba "Scripts"
 2. **Copie o comando** de execução
 3. **Execute no terminal**:
@@ -63,6 +65,7 @@ generated_scripts/
 ## 🔧 Funcionalidades do Sistema
 
 ### ✅ Interface Web (Porta 8084)
+
 - Upload e preview de arquivos
 - Configuração de transformações (ex: "ENF01" → "76")
 - Validação de dados e exclusão de linhas
@@ -70,24 +73,28 @@ generated_scripts/
 - Sistema de persistência de estado
 
 ### ✅ Quick ETL
+
 - Aplicação rápida de configurações salvas
 - Upload direto para Supabase
 - Preview de dados processados
 - Geração de scripts Python
 
 ### ✅ Gerenciamento de Configurações
+
 - Salvamento local (localStorage)
 - Carregamento de configurações
 - Descrições e metadados
 - Exclusão de configurações
 
 ### ✅ Scripts Python Independentes
+
 - Auto-executáveis (sem dependência da web)
 - Configuração automática de ambiente
 - Upload para Supabase integrado
 - Prompt interativo para seleção de arquivos
 
 ### ✅ API Backend (Porta 8000)
+
 - Endpoints para upload e processamento
 - ETL com filtros de outliers automáticos
 - Upload para Supabase
@@ -96,15 +103,18 @@ generated_scripts/
 ## 🚀 Fluxo de Trabalho Recomendado
 
 ### Primeiro Uso:
+
 1. **Configure via web** → Teste com arquivo de exemplo
 2. **Salve a configuração** → Dê nome descritivo
 3. **Gere script Python** → Para uso futuro independente
 
 ### Uso Recorrente:
+
 1. **Use Quick ETL** → Para processamento rápido
 2. **Execute scripts Python** → Para automação/batch
 
 ### Uso em Produção:
+
 1. **Execute scripts via terminal** → Sem dependência da interface web
 2. **Automatize com cron/scheduler** → Para processamento regular
 
