@@ -613,6 +613,7 @@ class ETLProcessRequest(BaseModel):
     transformations: dict[str, str]
     excluded_columns: list[str]
     excluded_rows: list[int] = []
+    mappings: list[dict[str, Any]] = []
 
 class SupabaseUploadRequest(BaseModel):
     """Modelo para upload direto ao Supabase"""
@@ -638,22 +639,52 @@ async def process_etl_simple(request: ETLProcessRequest):
         # Carregar dados
         df = etl._load_and_prepare_dataframe(str(file_path), skip_first_line=True)
         
-        # Aplicar transformações
-        for old_value, new_value in request.transformations.items():
-            df = df.replace(old_value, new_value)
-        
-        # Remover colunas excluídas
-        if request.excluded_columns:
-            existing_excluded_columns = [col for col in request.excluded_columns if col in df.columns]
-            if existing_excluded_columns:
-                df = df.drop(columns=existing_excluded_columns)
+        # Se temos mappings, usar a lógica completa do ETL
+        if request.mappings:
+            logger.info(f"Aplicando {len(request.mappings)} mapeamentos de coluna")
+            
+            # Converter mappings para formato esperado pelo ETL
+            column_mapping = []
+            for mapping in request.mappings:
+                # Aplicar transformações específicas primeiro se existirem
+                if mapping.get('type') == 'derived' and mapping.get('transformations'):
+                    csv_col = mapping.get('derivedFrom', mapping.get('csvColumn', ''))
+                    for old_val, new_val in mapping['transformations'].items():
+                        if csv_col in df.columns:
+                            df[csv_col] = df[csv_col].replace(old_val, new_val)
+                
+                column_mapping.append({
+                    'csv_column': mapping.get('csvColumn', ''),
+                    'db_column': mapping.get('sqlColumn', ''),
+                    'enabled': True,
+                    'data_type': 'TEXT'
+                })
+            
+            # Aplicar mapeamento de colunas usando a função do ETL
+            df_result = etl._apply_column_mapping_transformations(df, column_mapping)
+            
+        else:
+            # Fallback: lógica simples original
+            logger.info("Nenhum mapeamento fornecido, usando transformações simples")
+            
+            # Aplicar transformações
+            for old_value, new_value in request.transformations.items():
+                df = df.replace(old_value, new_value)
+            
+            # Remover colunas excluídas
+            if request.excluded_columns:
+                existing_excluded_columns = [col for col in request.excluded_columns if col in df.columns]
+                if existing_excluded_columns:
+                    df = df.drop(columns=existing_excluded_columns)
+            
+            df_result = df
         
         # Remover linhas excluídas
         if request.excluded_rows:
-            df = df.drop(index=request.excluded_rows, errors='ignore')
+            df_result = df_result.drop(index=request.excluded_rows, errors='ignore')
         
         # Converter para lista de dicionários
-        data = df.to_dict('records')
+        data = df_result.to_dict('records')
         
         logger.info(f"ETL simples concluído: {len(data)} registros processados")
         
@@ -665,7 +696,8 @@ async def process_etl_simple(request: ETLProcessRequest):
                 "total_records": len(data),
                 "transformations_applied": len(request.transformations),
                 "columns_removed": len(request.excluded_columns),
-                "rows_removed": len(request.excluded_rows)
+                "rows_removed": len(request.excluded_rows),
+                "mappings_applied": len(request.mappings) if request.mappings else 0
             }
         }
         
