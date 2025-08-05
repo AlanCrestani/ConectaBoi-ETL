@@ -47,6 +47,15 @@ interface QuickETLProps {
     originalFileName: string;
     previewData: Record<string, unknown>[];
     columns: string[];
+    mappings: Array<{
+      csvColumn: string;
+      sqlColumn: string;
+      type: "direct" | "derived" | "fixed";
+      transformations?: Record<string, string>;
+      fixedValue?: string;
+      derivedFrom?: string;
+      validateInDimCurral?: boolean;
+    }>;
   };
 }
 
@@ -112,6 +121,7 @@ export function QuickETL({ savedConfig }: QuickETLProps) {
         transformations: savedConfig.transformations,
         excluded_columns: savedConfig.removedColumns,
         excluded_rows: [],
+        mappings: savedConfig.mappings, // Adiciona os mappings
       };
 
       const etlResponse = await fetch(

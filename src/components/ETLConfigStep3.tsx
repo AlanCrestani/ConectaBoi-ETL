@@ -67,6 +67,7 @@ const ETLConfigStep3 = ({
     originalFileName: string;
     previewData: Record<string, unknown>[];
     columns: string[];
+    mappings: ColumnMapping[];
   } | null>(null);
   const { toast } = useToast();
   const { loadConfig } = useConfigPersistence();
@@ -448,7 +449,10 @@ const ETLConfigStep3 = ({
     previewData: Record<string, unknown>[];
     columns: string[];
   }) => {
-    setSelectedConfig(config);
+    setSelectedConfig({
+      ...config,
+      mappings: mappings // Adiciona os mappings atuais
+    });
     toast({
       title: "Configuração Carregada",
       description: "A configuração foi carregada com sucesso para o Quick ETL.",

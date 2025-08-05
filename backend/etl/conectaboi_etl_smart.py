@@ -28,7 +28,10 @@ class ConectaBoiETL:
         """Configura conexão REAL com Supabase"""
         try:
             from supabase import create_client, Client
-            from ..config.settings import get_settings
+            import sys
+            import os
+            sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+            from config.settings import get_settings
             
             settings = get_settings()
             
@@ -53,8 +56,8 @@ class ConectaBoiETL:
                 logger.info("💡 Configure SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY no arquivo .env")
                 self.supabase = None
                 
-        except ImportError:
-            logger.error("❌ Biblioteca 'supabase' não instalada")
+        except ImportError as import_error:
+            logger.error(f"❌ Erro de importação: {import_error}")
             logger.info("💡 Execute: pip install supabase")
             self.supabase = None
         except Exception as e:
