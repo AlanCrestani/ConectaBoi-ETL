@@ -2,13 +2,21 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Download, CheckCircle, FileText, Database, Settings, Code } from "lucide-react";
+import {
+  ArrowLeft,
+  Download,
+  CheckCircle,
+  FileText,
+  Database,
+  Settings,
+  Code,
+} from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface ColumnMapping {
   csvColumn: string;
   sqlColumn: string;
-  type: 'direct' | 'derived' | 'fixed';
+  type: "direct" | "derived" | "fixed";
   transformations?: Record<string, string>;
   fixedValue?: string;
   derivedFrom?: string;
@@ -26,18 +34,31 @@ interface ETLConfigStep4Props {
   onComplete: () => void;
 }
 
-const ETLConfigStep4 = ({ 
-  fileId, 
-  csvData, 
-  csvHeaders, 
-  mappings, 
-  excludedRows, 
+const ETLConfigStep4 = ({
+  fileId,
+  csvData,
+  csvHeaders,
+  mappings,
+  excludedRows,
   sqlSchema,
-  onBack, 
-  onComplete 
+  onBack,
+  onComplete,
 }: ETLConfigStep4Props) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const { toast } = useToast();
+
+  // Debug logs
+  console.log("ETLConfigStep4 mounted with props:", {
+    fileId,
+    csvDataLength: csvData?.length,
+    csvHeadersLength: csvHeaders?.length,
+    mappingsLength: mappings?.length,
+    excludedRowsLength: excludedRows?.length,
+    sqlSchemaLength: sqlSchema?.length,
+  });
+
+  // Log do componente sendo renderizado
+  console.log("🎯 ETLConfigStep4 is rendering!");
 
   const generatePythonScript = () => {
     return `#!/usr/bin/env python3
@@ -199,55 +220,57 @@ if __name__ == "__main__":
       sqlSchema,
       createdAt: new Date().toISOString(),
       description: `Configuração ETL para ${fileId}`,
-      version: "1.0"
+      version: "1.0",
     };
   };
 
   const downloadAllFiles = () => {
     setIsGenerating(true);
-    
+
     try {
       // Generate files
       const pythonScript = generatePythonScript();
       const configJSON = generateConfigJSON();
-      
+
       // Download Python script
-      const scriptBlob = new Blob([pythonScript], { type: 'text/python' });
+      const scriptBlob = new Blob([pythonScript], { type: "text/python" });
       const scriptUrl = URL.createObjectURL(scriptBlob);
-      const scriptLink = document.createElement('a');
+      const scriptLink = document.createElement("a");
       scriptLink.href = scriptUrl;
       scriptLink.download = `etl_${fileId}.py`;
       scriptLink.click();
       URL.revokeObjectURL(scriptUrl);
-      
+
       // Download config JSON
-      const configBlob = new Blob([JSON.stringify(configJSON, null, 2)], { type: 'application/json' });
+      const configBlob = new Blob([JSON.stringify(configJSON, null, 2)], {
+        type: "application/json",
+      });
       const configUrl = URL.createObjectURL(configBlob);
-      const configLink = document.createElement('a');
+      const configLink = document.createElement("a");
       configLink.href = configUrl;
       configLink.download = `${fileId}_config.json`;
       configLink.click();
       URL.revokeObjectURL(configUrl);
-      
+
       // Download SQL schema
-      const sqlBlob = new Blob([sqlSchema], { type: 'text/sql' });
+      const sqlBlob = new Blob([sqlSchema], { type: "text/sql" });
       const sqlUrl = URL.createObjectURL(sqlBlob);
-      const sqlLink = document.createElement('a');
+      const sqlLink = document.createElement("a");
       sqlLink.href = sqlUrl;
       sqlLink.download = `etl_staging_${fileId}.sql`;
       sqlLink.click();
       URL.revokeObjectURL(sqlUrl);
-      
+
       toast({
         title: "Arquivos gerados",
-        description: "Script Python, configuração JSON e schema SQL baixados com sucesso!",
+        description:
+          "Script Python, configuração JSON e schema SQL baixados com sucesso!",
       });
-      
     } catch (error) {
       toast({
         title: "Erro na geração",
         description: "Falha ao gerar os arquivos. Tente novamente.",
-        variant: "destructive"
+        variant: "destructive",
       });
     } finally {
       setIsGenerating(false);
@@ -255,11 +278,29 @@ if __name__ == "__main__":
   };
 
   const getStatsData = () => {
+    // Proteção contra dados undefined
+    if (!csvData || !mappings || !excludedRows) {
+      console.warn("Dados incompletos para estatísticas:", {
+        csvData,
+        mappings,
+        excludedRows,
+      });
+      return {
+        totalRows: 0,
+        validRows: 0,
+        excludedRows: 0,
+        totalMappings: 0,
+        directMappings: 0,
+        derivedMappings: 0,
+        fixedMappings: 0,
+      };
+    }
+
     const validRows = csvData.length - excludedRows.length;
-    const directMappings = mappings.filter(m => m.type === 'direct').length;
-    const derivedMappings = mappings.filter(m => m.type === 'derived').length;
-    const fixedMappings = mappings.filter(m => m.type === 'fixed').length;
-    
+    const directMappings = mappings.filter((m) => m.type === "direct").length;
+    const derivedMappings = mappings.filter((m) => m.type === "derived").length;
+    const fixedMappings = mappings.filter((m) => m.type === "fixed").length;
+
     return {
       totalRows: csvData.length,
       validRows,
@@ -267,7 +308,7 @@ if __name__ == "__main__":
       totalMappings: mappings.length,
       directMappings,
       derivedMappings,
-      fixedMappings
+      fixedMappings,
     };
   };
 
@@ -281,7 +322,8 @@ if __name__ == "__main__":
           Configuração Concluída
         </h2>
         <p className="text-muted-foreground">
-          ETL configurado com sucesso! Baixe os arquivos e execute o processamento.
+          ETL configurado com sucesso! Baixe os arquivos e execute o
+          processamento.
         </p>
       </div>
 
@@ -296,30 +338,38 @@ if __name__ == "__main__":
         <CardContent>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <div className="text-center p-4 bg-primary/5 rounded-lg border border-primary/20">
-              <div className="text-2xl font-bold text-primary">{stats.validRows}</div>
-              <div className="text-sm text-muted-foreground">Linhas Válidas</div>
+              <div className="text-2xl font-bold text-primary">
+                {stats.validRows}
+              </div>
+              <div className="text-sm text-muted-foreground">
+                Linhas Válidas
+              </div>
             </div>
-            
+
             <div className="text-center p-4 bg-accent/5 rounded-lg border border-accent/20">
-              <div className="text-2xl font-bold text-accent">{stats.totalMappings}</div>
+              <div className="text-2xl font-bold text-accent">
+                {stats.totalMappings}
+              </div>
               <div className="text-sm text-muted-foreground">Mapeamentos</div>
             </div>
-            
+
             <div className="text-center p-4 bg-success/5 rounded-lg border border-success/20">
-              <div className="text-2xl font-bold text-success">{stats.directMappings}</div>
+              <div className="text-2xl font-bold text-success">
+                {stats.directMappings}
+              </div>
               <div className="text-sm text-muted-foreground">Diretos</div>
             </div>
-            
+
             <div className="text-center p-4 bg-warning/5 rounded-lg border border-warning/20">
-              <div className="text-2xl font-bold text-warning">{stats.derivedMappings + stats.fixedMappings}</div>
+              <div className="text-2xl font-bold text-warning">
+                {stats.derivedMappings + stats.fixedMappings}
+              </div>
               <div className="text-sm text-muted-foreground">Transformados</div>
             </div>
           </div>
-          
+
           <div className="mt-4 flex flex-wrap gap-2">
-            <Badge variant="outline">
-              CSV: {csvHeaders.length} colunas
-            </Badge>
+            <Badge variant="outline">CSV: {csvHeaders.length} colunas</Badge>
             <Badge variant="outline">
               SQL: {mappings.length} campos mapeados
             </Badge>
@@ -344,18 +394,22 @@ if __name__ == "__main__":
               <Code className="h-8 w-8 text-primary" />
               <div>
                 <div className="font-medium">etl_{fileId}.py</div>
-                <div className="text-sm text-muted-foreground">Script Python</div>
+                <div className="text-sm text-muted-foreground">
+                  Script Python
+                </div>
               </div>
             </div>
-            
+
             <div className="flex items-center space-x-3 p-3 border border-border rounded-lg">
               <Settings className="h-8 w-8 text-accent" />
               <div>
                 <div className="font-medium">{fileId}_config.json</div>
-                <div className="text-sm text-muted-foreground">Configuração</div>
+                <div className="text-sm text-muted-foreground">
+                  Configuração
+                </div>
               </div>
             </div>
-            
+
             <div className="flex items-center space-x-3 p-3 border border-border rounded-lg">
               <Database className="h-8 w-8 text-secondary" />
               <div>
@@ -369,9 +423,18 @@ if __name__ == "__main__":
             <h4 className="font-medium mb-2">Próximos Passos:</h4>
             <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
               <li>Baixe todos os arquivos gerados</li>
-              <li>Execute o schema SQL no Supabase para criar a tabela staging</li>
-              <li>Configure as variáveis de ambiente (SUPABASE_URL, SUPABASE_KEY)</li>
-              <li>Execute o script Python: <code className="bg-background px-1 rounded">python etl_{fileId}.py</code></li>
+              <li>
+                Execute o schema SQL no Supabase para criar a tabela staging
+              </li>
+              <li>
+                Configure as variáveis de ambiente (SUPABASE_URL, SUPABASE_KEY)
+              </li>
+              <li>
+                Execute o script Python:{" "}
+                <code className="bg-background px-1 rounded">
+                  python etl_{fileId}.py
+                </code>
+              </li>
               <li>Verifique os logs e os dados na tabela staging</li>
             </ol>
           </div>
@@ -379,11 +442,15 @@ if __name__ == "__main__":
       </Card>
 
       <div className="flex justify-between">
-        <Button variant="outline" onClick={onBack} className="flex items-center space-x-2">
+        <Button
+          variant="outline"
+          onClick={onBack}
+          className="flex items-center space-x-2"
+        >
           <ArrowLeft className="h-4 w-4" />
           <span>Voltar</span>
         </Button>
-        
+
         <div className="flex space-x-2">
           <Button
             onClick={downloadAllFiles}
@@ -391,13 +458,10 @@ if __name__ == "__main__":
             className="flex items-center space-x-2"
           >
             <Download className="h-4 w-4" />
-            <span>{isGenerating ? 'Gerando...' : 'Baixar Arquivos'}</span>
+            <span>{isGenerating ? "Gerando..." : "Baixar Arquivos"}</span>
           </Button>
-          
-          <Button 
-            onClick={onComplete}
-            variant="outline"
-          >
+
+          <Button onClick={onComplete} variant="outline">
             Configurar Outro Arquivo
           </Button>
         </div>

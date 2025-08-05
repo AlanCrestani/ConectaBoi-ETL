@@ -184,12 +184,26 @@ const ETLConfigStep1 = ({ fileId, onNext }: ETLConfigStep1Props) => {
       autoDetectSchema();
     } catch (error) {
       console.error("Erro no upload:", error);
-      toast({
-        title: "Erro no upload",
-        description:
-          error instanceof Error ? error.message : "Erro desconhecido",
-        variant: "destructive",
-      });
+
+      // Verificar se é erro de conectividade
+      const isConnectionError =
+        error instanceof TypeError && error.message.includes("fetch");
+
+      if (isConnectionError) {
+        toast({
+          title: "Erro de Conexão",
+          description:
+            "Não foi possível conectar ao servidor backend. Verifique se o backend está rodando em http://localhost:8000",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Erro no upload",
+          description:
+            error instanceof Error ? error.message : "Erro desconhecido",
+          variant: "destructive",
+        });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -282,12 +296,26 @@ const ETLConfigStep1 = ({ fileId, onNext }: ETLConfigStep1Props) => {
       }
     } catch (error) {
       console.error("Erro no processamento:", error);
-      toast({
-        title: "Erro no processamento",
-        description:
-          error instanceof Error ? error.message : "Erro desconhecido",
-        variant: "destructive",
-      });
+
+      // Verificar se é erro de conectividade
+      const isConnectionError =
+        error instanceof TypeError && error.message.includes("fetch");
+
+      if (isConnectionError) {
+        toast({
+          title: "Erro de Conexão",
+          description:
+            "Não foi possível conectar ao servidor backend. Verifique se o backend está rodando em http://localhost:8000",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Erro no processamento",
+          description:
+            error instanceof Error ? error.message : "Erro desconhecido",
+          variant: "destructive",
+        });
+      }
     } finally {
       setIsLoading(false);
     }

@@ -3,13 +3,23 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { ArrowRight, ArrowLeft, Eye, Download, Trash2, CheckCircle } from "lucide-react";
+import {
+  ArrowRight,
+  ArrowLeft,
+  Eye,
+  Download,
+  Trash2,
+  CheckCircle,
+  CheckCircle2,
+} from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useSafeCSVData } from "@/hooks/useSafeCSVData";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface ColumnMapping {
   csvColumn: string;
   sqlColumn: string;
-  type: 'direct' | 'derived' | 'fixed';
+  type: "direct" | "derived" | "fixed";
   transformations?: Record<string, string>;
   fixedValue?: string;
   derivedFrom?: string;
@@ -25,22 +35,119 @@ interface ETLConfigStep3Props {
   onBack: () => void;
 }
 
-const ETLConfigStep3 = ({ fileId, csvData, csvHeaders, mappings, onNext, onBack }: ETLConfigStep3Props) => {
+const ETLConfigStep3 = ({
+  fileId,
+  csvData,
+  csvHeaders,
+  mappings,
+  onNext,
+  onBack,
+}: ETLConfigStep3Props) => {
   const [excludedRows, setExcludedRows] = useState<Set<number>>(new Set([0])); // First row excluded by default
   const [showPreview, setShowPreview] = useState(false);
   const { toast } = useToast();
 
-  // Filter short rows (< 30 characters) for auto-exclusion
-  const shortRows = csvData.map((row, index) => ({
-    index,
-    isShort: row.join('').length < 30
-  })).filter(item => item.isShort).map(item => item.index);
+  // Usar validação defensiva dos dados CSV
+  const safeData = useSafeCSVData(csvHeaders, csvData);
+
+  // Debug logs
+  console.log("🔍 ETLConfigStep3 Debug - Dados recebidos:");
+  console.log("csvData type:", typeof csvData);
+  console.log("csvData isArray:", Array.isArray(csvData));
+  console.log("csvData sample:", csvData ? csvData.slice(0, 2) : null);
+  console.log("🛡️ SafeData:", safeData); // Filter short rows (< 30 characters) for auto-exclusion - com proteção usando dados seguros
+  const shortRows = safeData.data
+    .map((row, index) => ({
+      index,
+      isShort: row.join("").length < 30,
+    }))
+    .filter((item) => item.isShort)
+    .map((item) => item.index);
 
   // Initialize excluded rows with first row and short rows
   useState(() => {
     const initialExcluded = new Set([0, ...shortRows]);
     setExcludedRows(initialExcluded);
   });
+
+  // Proteção contra dados undefined ou vazios (após os hooks)
+  if (
+    !csvData ||
+    !csvHeaders ||
+    !mappings ||
+    csvData.length === 0 ||
+    mappings.length === 0
+  ) {
+    console.error("ETLConfigStep3: Dados incompletos recebidos:", {
+      csvData: !!csvData,
+      csvHeaders: !!csvHeaders,
+      mappings: !!mappings,
+      csvDataLength: csvData?.length,
+      mappingsLength: mappings?.length,
+    });
+
+    return (
+      <div className="space-y-6 max-w-6xl mx-auto">
+        <div className="text-center">
+          <h2 className="text-2xl font-semibold text-foreground mb-2">
+            Erro: Dados Incompletos
+          </h2>
+          <p className="text-muted-foreground mb-4">
+            Não foi possível carregar os dados necessários para o preview.
+          </p>
+          <Button
+            variant="outline"
+            onClick={onBack}
+            className="flex items-center space-x-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            <span>Voltar para Mapeamento</span>
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  const handleNextClick = () => {
+    console.log("🚀 PRÓXIMO STEP - Iniciando validação automática...");
+
+    // Validação automática antes de prosseguir
+    const validation = validateData();
+
+    console.log(
+      "Gerar Script ETL clicked with excludedRows:",
+      Array.from(excludedRows)
+    );
+
+    // Verificar se há problemas críticos
+    if (validation.issues.length > 0) {
+      console.error(
+        "❌ Validação falhou, não pode prosseguir:",
+        validation.issues
+      );
+      toast({
+        title: "❌ Não é possível prosseguir",
+        description: `Corrija os ${validation.issues.length} problemas encontrados antes de continuar`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    console.log("✅ Validação passou, prosseguindo...");
+    console.log("Calling onNext function...");
+
+    try {
+      onNext(Array.from(excludedRows));
+      console.log("onNext called successfully");
+    } catch (error) {
+      console.error("Error calling onNext:", error);
+      toast({
+        title: "❌ Erro ao prosseguir",
+        description: "Erro interno ao navegar para próximo step",
+        variant: "destructive",
+      });
+    }
+  };
 
   const toggleRowExclusion = (rowIndex: number) => {
     const newExcluded = new Set(excludedRows);
@@ -53,22 +160,25 @@ const ETLConfigStep3 = ({ fileId, csvData, csvHeaders, mappings, onNext, onBack 
   };
 
   const generatePreviewRow = () => {
-    // Find first non-excluded row for preview
-    const firstValidRow = csvData.find((_, index) => !excludedRows.has(index));
+    // Find first non-excluded row for preview usando dados seguros
+    const firstValidRow = safeData.data.find(
+      (_, index) => !excludedRows.has(index)
+    );
     if (!firstValidRow) return {};
 
-    const previewData: Record<string, any> = {};
-    
-    mappings.forEach(mapping => {
-      if (mapping.type === 'fixed') {
+    const previewData: Record<string, string | number> = {};
+
+    mappings.forEach((mapping) => {
+      if (mapping.type === "fixed") {
         previewData[mapping.sqlColumn] = mapping.fixedValue;
-      } else if (mapping.type === 'derived') {
-        const sourceValue = firstValidRow[csvHeaders.indexOf(mapping.derivedFrom || '')];
+      } else if (mapping.type === "derived") {
+        const sourceValue =
+          firstValidRow[safeData.headers.indexOf(mapping.derivedFrom || "")];
         // Apply transformations if any
-        previewData[mapping.sqlColumn] = sourceValue || 'DERIVADO';
+        previewData[mapping.sqlColumn] = sourceValue || "DERIVADO";
       } else {
-        const csvIndex = csvHeaders.indexOf(mapping.csvColumn);
-        previewData[mapping.sqlColumn] = firstValidRow[csvIndex] || '';
+        const csvIndex = safeData.headers.indexOf(mapping.csvColumn);
+        previewData[mapping.sqlColumn] = firstValidRow[csvIndex] || "";
       }
     });
 
@@ -82,12 +192,14 @@ const ETLConfigStep3 = ({ fileId, csvData, csvHeaders, mappings, onNext, onBack 
       csvHeaders,
       mappings,
       excludedRows: Array.from(excludedRows),
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
     };
 
-    const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
+    const blob = new Blob([JSON.stringify(config, null, 2)], {
+      type: "application/json",
+    });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
     a.download = `${fileId}_config.json`;
     a.click();
@@ -99,8 +211,107 @@ const ETLConfigStep3 = ({ fileId, csvData, csvHeaders, mappings, onNext, onBack 
     });
   };
 
+  const validateData = () => {
+    console.log("🔍 VALIDAÇÃO DETALHADA - Iniciando...");
+
+    const validation = {
+      safeData: safeData,
+      originalData: { csvData, csvHeaders },
+      mappings: mappings,
+      excludedRows: Array.from(excludedRows),
+      validRowCount: safeData.data.length - excludedRows.size,
+      issues: [] as string[],
+      warnings: [] as string[],
+      summary: {} as Record<string, string | number>,
+    };
+
+    // Validar dados básicos
+    if (!safeData.isValid) {
+      validation.issues.push("Dados CSV inválidos");
+      validation.issues.push(...safeData.errors);
+    }
+
+    // Validar mapeamentos
+    const mappingIssues = mappings.filter((m) => {
+      if (m.type === "direct" && !safeData.headers.includes(m.csvColumn)) {
+        return true;
+      }
+      if (
+        m.type === "derived" &&
+        m.derivedFrom &&
+        !safeData.headers.includes(m.derivedFrom)
+      ) {
+        return true;
+      }
+      return false;
+    });
+
+    if (mappingIssues.length > 0) {
+      validation.issues.push(
+        `${mappingIssues.length} mapeamentos com colunas inexistentes`
+      );
+    }
+
+    // Validar transformações
+    const transformationStats = mappings.reduce(
+      (acc, mapping) => {
+        if (
+          mapping.transformations &&
+          Object.keys(mapping.transformations).length > 0
+        ) {
+          acc.withTransformations++;
+          acc.totalTransformations += Object.keys(
+            mapping.transformations
+          ).length;
+        }
+        return acc;
+      },
+      { withTransformations: 0, totalTransformations: 0 }
+    );
+
+    validation.summary = {
+      totalRows: safeData.data.length,
+      excludedRows: excludedRows.size,
+      validRows: safeData.data.length - excludedRows.size,
+      totalColumns: safeData.headers.length,
+      mappedColumns: mappings.length,
+      transformationsCount: transformationStats.totalTransformations,
+      columnsWithTransformations: transformationStats.withTransformations,
+    };
+
+    // Warnings
+    const validRows = safeData.data.length - excludedRows.size;
+    if (validRows < 10) {
+      validation.warnings.push("Poucas linhas válidas para processamento");
+    }
+
+    if (mappings.length < safeData.headers.length) {
+      validation.warnings.push(
+        `${safeData.headers.length - mappings.length} colunas sem mapeamento`
+      );
+    }
+
+    console.log("🔍 VALIDAÇÃO COMPLETA:", validation);
+
+    // Toast com resultado
+    if (validation.issues.length === 0) {
+      toast({
+        title: "✅ Validação OK!",
+        description: `${validation.summary.validRows} linhas válidas, ${validation.summary.mappedColumns} colunas mapeadas`,
+      });
+    } else {
+      toast({
+        title: "⚠️ Problemas encontrados",
+        description: `${validation.issues.length} problemas, ${validation.warnings.length} avisos`,
+        variant: "destructive",
+      });
+    }
+
+    return validation;
+  };
+
   const previewData = generatePreviewRow();
-  const validRowCount = csvData.length - excludedRows.size;
+  const validRowCount = safeData.data.length - excludedRows.size;
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
@@ -112,6 +323,20 @@ const ETLConfigStep3 = ({ fileId, csvData, csvHeaders, mappings, onNext, onBack 
           Revise os dados, exclua linhas inválidas e visualize o resultado final
         </p>
       </div>
+
+      {/* Alert para dados inválidos */}
+      {!safeData.isValid && (
+        <Alert variant="destructive">
+          <AlertDescription>
+            <strong>⚠️ Problema com os dados:</strong>
+            <ul className="list-disc list-inside mt-2">
+              {safeData.errors.map((error, idx) => (
+                <li key={idx}>{error}</li>
+              ))}
+            </ul>
+          </AlertDescription>
+        </Alert>
+      )}
 
       {/* Data Preview Table */}
       <Card>
@@ -127,7 +352,7 @@ const ETLConfigStep3 = ({ fileId, csvData, csvHeaders, mappings, onNext, onBack 
               size="sm"
               onClick={() => setShowPreview(!showPreview)}
             >
-              {showPreview ? 'Ocultar' : 'Mostrar'} Preview
+              {showPreview ? "Ocultar" : "Mostrar"} Preview
             </Button>
           </CardTitle>
         </CardHeader>
@@ -138,20 +363,26 @@ const ETLConfigStep3 = ({ fileId, csvData, csvHeaders, mappings, onNext, onBack 
                 <tr>
                   <th className="text-left p-2 w-12">Excluir</th>
                   <th className="text-left p-2 w-12">#</th>
-                  {csvHeaders.slice(0, 6).map((header, idx) => (
-                    <th key={idx} className="text-left p-2 min-w-24 truncate">{header}</th>
+                  {safeData.headers.slice(0, 6).map((header, idx) => (
+                    <th key={idx} className="text-left p-2 min-w-24 truncate">
+                      {header}
+                    </th>
                   ))}
-                  {csvHeaders.length > 6 && (
-                    <th className="text-left p-2">+{csvHeaders.length - 6} mais...</th>
+                  {safeData.headers.length > 6 && (
+                    <th className="text-left p-2">
+                      +{safeData.headers.length - 6} mais...
+                    </th>
                   )}
                 </tr>
               </thead>
               <tbody>
-                {csvData.slice(0, 20).map((row, rowIndex) => (
-                  <tr 
+                {safeData.data.slice(0, 20).map((row, rowIndex) => (
+                  <tr
                     key={rowIndex}
                     className={`border-t border-border ${
-                      excludedRows.has(rowIndex) ? 'bg-destructive/5 text-muted-foreground' : 'hover:bg-muted/30'
+                      excludedRows.has(rowIndex)
+                        ? "bg-destructive/5 text-muted-foreground"
+                        : "hover:bg-muted/30"
                     }`}
                   >
                     <td className="p-2">
@@ -160,9 +391,15 @@ const ETLConfigStep3 = ({ fileId, csvData, csvHeaders, mappings, onNext, onBack 
                         onCheckedChange={() => toggleRowExclusion(rowIndex)}
                       />
                     </td>
-                    <td className="p-2 text-xs text-muted-foreground">{rowIndex + 1}</td>
+                    <td className="p-2 text-xs text-muted-foreground">
+                      {rowIndex + 1}
+                    </td>
                     {row.slice(0, 6).map((cell: string, cellIdx: number) => (
-                      <td key={cellIdx} className="p-2 max-w-32 truncate" title={cell}>
+                      <td
+                        key={cellIdx}
+                        className="p-2 max-w-32 truncate"
+                        title={cell}
+                      >
                         {cell}
                       </td>
                     ))}
@@ -187,9 +424,10 @@ const ETLConfigStep3 = ({ fileId, csvData, csvHeaders, mappings, onNext, onBack 
               <Trash2 className="h-4 w-4" />
               <span>Auto-exclusão</span>
             </Button>
-            
+
             <div className="text-sm text-muted-foreground flex items-center">
-              • {excludedRows.size} linhas excluídas • {validRowCount} linhas para processar
+              • {excludedRows.size} linhas excluídas • {validRowCount} linhas
+              para processar
             </div>
           </div>
         </CardContent>
@@ -209,25 +447,33 @@ const ETLConfigStep3 = ({ fileId, csvData, csvHeaders, mappings, onNext, onBack 
               <p className="text-sm text-muted-foreground mb-3">
                 Primeira linha válida após transformação:
               </p>
-              
+
               <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
                 {Object.entries(previewData).map(([column, value]) => {
-                  const mapping = mappings.find(m => m.sqlColumn === column);
+                  const mapping = mappings.find((m) => m.sqlColumn === column);
                   const getTypeColor = () => {
-                    switch(mapping?.type) {
-                      case 'derived': return 'text-accent border-accent/20 bg-accent/5';
-                      case 'fixed': return 'text-secondary border-secondary/20 bg-secondary/5'; 
-                      default: return 'text-primary border-primary/20 bg-primary/5';
+                    switch (mapping?.type) {
+                      case "derived":
+                        return "text-accent border-accent/20 bg-accent/5";
+                      case "fixed":
+                        return "text-secondary border-secondary/20 bg-secondary/5";
+                      default:
+                        return "text-primary border-primary/20 bg-primary/5";
                     }
                   };
 
                   return (
-                    <div key={column} className={`border rounded-lg p-3 ${getTypeColor()}`}>
+                    <div
+                      key={column}
+                      className={`border rounded-lg p-3 ${getTypeColor()}`}
+                    >
                       <div className="font-medium text-sm">{column}</div>
                       <div className="text-xs opacity-75 mt-1">
-                        {mapping?.type === 'fixed' ? 'Valor fixo' :
-                         mapping?.type === 'derived' ? `Derivado de: ${mapping.derivedFrom}` :
-                         `CSV: ${mapping?.csvColumn}`}
+                        {mapping?.type === "fixed"
+                          ? "Valor fixo"
+                          : mapping?.type === "derived"
+                          ? `Derivado de: ${mapping.derivedFrom}`
+                          : `CSV: ${mapping?.csvColumn}`}
                       </div>
                       <div className="font-mono text-sm mt-2 bg-background/50 rounded px-2 py-1">
                         {String(value)}
@@ -242,12 +488,25 @@ const ETLConfigStep3 = ({ fileId, csvData, csvHeaders, mappings, onNext, onBack 
       )}
 
       <div className="flex justify-between">
-        <Button variant="outline" onClick={onBack} className="flex items-center space-x-2">
+        <Button
+          variant="outline"
+          onClick={onBack}
+          className="flex items-center space-x-2"
+        >
           <ArrowLeft className="h-4 w-4" />
           <span>Voltar</span>
         </Button>
-        
+
         <div className="flex space-x-2">
+          <Button
+            variant="outline"
+            onClick={validateData}
+            className="flex items-center space-x-2"
+          >
+            <CheckCircle2 className="h-4 w-4" />
+            <span>Validar</span>
+          </Button>
+
           <Button
             variant="outline"
             onClick={downloadConfig}
@@ -256,9 +515,9 @@ const ETLConfigStep3 = ({ fileId, csvData, csvHeaders, mappings, onNext, onBack 
             <Download className="h-4 w-4" />
             <span>Salvar Config</span>
           </Button>
-          
-          <Button 
-            onClick={() => onNext(Array.from(excludedRows))}
+
+          <Button
+            onClick={handleNextClick}
             className="flex items-center space-x-2"
           >
             <span>Gerar Script ETL</span>
