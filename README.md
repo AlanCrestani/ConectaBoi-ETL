@@ -1,73 +1,116 @@
-# Welcome to your Lovable project
+# 🐂 ConectaBoi-ETL
 
-## Project info
+Sistema ETL (Extract, Transform, Load) inteligente para processamento de dados de confinamento bovino. Solução completa com frontend React + TypeScript e backend Python com FastAPI, integrado ao Supabase PostgreSQL.
 
-**URL**: https://lovable.dev/projects/6c8e5573-3654-4db7-91bb-13bddf0147fc
+## 🚀 Funcionalidades Principais
 
-## How can I edit this code?
+### 🧠 ETL Inteligente
+- **Detecção automática** de estrutura CSV
+- **Mapeamento inteligente** para tabelas do banco
+- **Validação automática** de tipos de dados
+- **Processamento em lote** otimizado
 
-There are several ways of editing your application.
+### 🎯 Interface Moderna
+- **Upload** de arquivos com drag & drop
+- **Configuração step-by-step** do ETL
+- **Monitoramento** em tempo real
+- **Relatórios** de processamento
 
-**Use Lovable**
+### 🔧 API Robusta
+- **FastAPI** com documentação automática
+- **Endpoints RESTful** para todas as operações
+- **Tratamento de erros** avançado
+- **Logging** completo
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/6c8e5573-3654-4db7-91bb-13bddf0147fc) and start prompting.
+## 🏗️ Arquitetura Técnica
 
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+```
+Frontend React → FastAPI Backend → ETL Engine → Supabase PostgreSQL
 ```
 
-**Edit a file directly in GitHub**
+### Stack Tecnológico
+- **Frontend**: React 18, TypeScript, Vite, Tailwind CSS, shadcn/ui
+- **Backend**: Python 3.12, FastAPI, Pandas, Uvicorn
+- **Database**: PostgreSQL (Supabase)
+- **ETL**: Engine inteligente customizado
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## 📁 Estrutura do Projeto
 
-**Use GitHub Codespaces**
+```
+ConectaBoi-ETL/
+├── backend/              # Backend Python (API + ETL)
+│   ├── api/              # FastAPI endpoints
+│   ├── config/           # Configurações
+│   ├── etl/              # Engine ETL inteligente
+│   └── utils/            # Utilitários
+├── src/                  # Frontend React + TypeScript
+├── data/                 # Dados e arquivos (input/processed/logs)
+├── tests/                # Testes automatizados
+├── docs/                 # Documentação
+└── venv_etl/             # Ambiente virtual Python
+```
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## 🚀 Como Executar
 
-## What technologies are used for this project?
+### 1. Configurar Ambiente Python
+```bash
+# Ativar ambiente virtual
+.env_etlcriptsctivate.ps1
 
-This project is built with:
+# Instalar dependências backend
+pip install -r backend/requirements.txt
+```
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+### 2. Iniciar Backend API
+```bash
+python start_api.py
+```
+Acesse: http://localhost:8000/docs
 
-## How can I deploy this project?
+### 3. Iniciar Frontend
+```bash
+npm install
+npm run dev
+```
+Acesse: http://localhost:5173
 
-Simply open [Lovable](https://lovable.dev/projects/6c8e5573-3654-4db7-91bb-13bddf0147fc) and click on Share -> Publish.
+## 📊 Banco de Dados (Supabase)
 
-## Can I connect a custom domain to my Lovable project?
+### Tabelas ETL
+- **animais_staging**: Dados dos animais em confinamento
+- **lotes_staging**: Informações dos lotes
+- **racoes_staging**: Dados das rações
+- **consumo_staging**: Registro de consumo alimentar
+- **desempenho_staging**: Performance dos animais
 
-Yes, you can!
+## 🔧 Endpoints da API
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+- `GET /` - Status da API
+- `GET /health` - Verificação de saúde
+- `POST /etl/detect-structure` - Detecta estrutura CSV
+- `POST /etl/auto-mapping` - Gera mapeamento automático
+- `POST /etl/process` - Processa arquivos ETL
+- `GET /etl/tables` - Lista tabelas disponíveis
+- `GET /etl/table-schema/{table}` - Schema de tabela específica
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+## 🔒 Segurança
+
+- Arquivo `.env` protegido pelo `.gitignore`
+- Chaves de API isoladas no backend
+- Validação rigorosa de entrada de dados
+- Sanitização de nomes de arquivos
+
+## 📚 Documentação Adicional
+
+- [📋 Estrutura Definitiva](docs/ESTRUTURA_DEFINITIVA.md)
+- [👔 Resumo Executivo](docs/RESUMO_EXECUTIVO.md)
+- [🎯 Briefing Coordenador](docs/BRIEFING_COORDENADOR.md)
+- [🐍 Setup Python](docs/PYTHON_SETUP.md)
+
+## 🤝 Contribuição
+
+Este projeto utiliza uma arquitetura moderna e escalável, pronto para produção com todas as melhores práticas implementadas.
+
+---
+
+**Desenvolvido com ❤️ para otimizar o agronegócio brasileiro**
