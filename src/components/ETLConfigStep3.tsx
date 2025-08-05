@@ -11,6 +11,9 @@ import {
   Trash2,
   CheckCircle,
   CheckCircle2,
+  ChevronUp,
+  ChevronDown,
+  ChevronsUpDown,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useSafeCSVData } from "@/hooks/useSafeCSVData";
@@ -45,6 +48,10 @@ const ETLConfigStep3 = ({
 }: ETLConfigStep3Props) => {
   const [excludedRows, setExcludedRows] = useState<Set<number>>(new Set([0])); // First row excluded by default
   const [showPreview, setShowPreview] = useState(false);
+  const [sortConfig, setSortConfig] = useState<{
+    column: number | "row-number" | null;
+    direction: "asc" | "desc" | null;
+  }>({ column: null, direction: null });
   const { toast } = useToast();
 
   // Usar validação defensiva dos dados CSV
@@ -157,6 +164,111 @@ const ETLConfigStep3 = ({
       newExcluded.add(rowIndex);
     }
     setExcludedRows(newExcluded);
+  };
+
+  // Função para ordenar os dados mantendo índices originais
+  const sortDataWithIndices = (
+    data: string[][],
+    columnIndex: number,
+    direction: "asc" | "desc"
+  ) => {
+    // Criar array com dados + índice original
+    const dataWithIndices = data.map((row, originalIndex) => ({
+      row,
+      originalIndex,
+    }));
+
+    return dataWithIndices.sort((a, b) => {
+      const aVal = a.row[columnIndex] || "";
+      const bVal = b.row[columnIndex] || "";
+
+      // Tentar converter para número se possível
+      const aNum = parseFloat(aVal);
+      const bNum = parseFloat(bVal);
+
+      if (!isNaN(aNum) && !isNaN(bNum)) {
+        // Comparação numérica
+        return direction === "asc" ? aNum - bNum : bNum - aNum;
+      } else {
+        // Comparação string
+        const result = aVal.localeCompare(bVal);
+        return direction === "asc" ? result : -result;
+      }
+    });
+  };
+
+  // Função para lidar com clique no cabeçalho
+  const handleSort = (columnIndex: number | "row-number") => {
+    let newDirection: "asc" | "desc" = "desc"; // Padrão: decrescente como solicitado
+
+    if (sortConfig.column === columnIndex) {
+      // Se já está ordenando por esta coluna, alterna direção
+      newDirection = sortConfig.direction === "desc" ? "asc" : "desc";
+    }
+
+    setSortConfig({ column: columnIndex, direction: newDirection });
+
+    const columnName =
+      columnIndex === "row-number"
+        ? "Número da Linha"
+        : safeData.headers[columnIndex];
+    console.log(
+      `🔄 Ordenando ${
+        columnIndex === "row-number"
+          ? "por número da linha"
+          : `coluna ${columnIndex} (${columnName})`
+      } - ${newDirection}`
+    );
+    toast({
+      title: "🔄 Dados ordenados",
+      description: `${
+        columnIndex === "row-number"
+          ? "Linhas ordenadas por número"
+          : `Coluna "${columnName}" ordenada`
+      } em ordem ${newDirection === "desc" ? "decrescente" : "crescente"}`,
+    });
+  };
+
+  // Aplicar ordenação aos dados se necessário
+  const sortedDataWithIndices = (() => {
+    if (sortConfig.column === null || !sortConfig.direction) {
+      return safeData.data.map((row, originalIndex) => ({
+        row,
+        originalIndex,
+      }));
+    }
+
+    if (sortConfig.column === "row-number") {
+      // Ordenação por número da linha (índice original)
+      const dataWithIndices = safeData.data.map((row, originalIndex) => ({
+        row,
+        originalIndex,
+      }));
+      return dataWithIndices.sort((a, b) => {
+        return sortConfig.direction === "asc"
+          ? a.originalIndex - b.originalIndex
+          : b.originalIndex - a.originalIndex;
+      });
+    } else {
+      // Ordenação por coluna de dados
+      return sortDataWithIndices(
+        safeData.data,
+        sortConfig.column,
+        sortConfig.direction
+      );
+    }
+  })();
+
+  // Ícone de ordenação para os cabeçalhos
+  const getSortIcon = (columnIndex: number | "row-number") => {
+    if (sortConfig.column !== columnIndex) {
+      return <ChevronsUpDown className="h-3 w-3 text-muted-foreground" />;
+    }
+    return sortConfig.direction === "asc" ? (
+      <ChevronUp className="h-3 w-3 text-primary" />
+    ) : (
+      <ChevronDown className="h-3 w-3 text-primary" />
+    );
   };
 
   const generatePreviewRow = () => {
@@ -346,14 +458,34 @@ const ETLConfigStep3 = ({
               <Eye className="h-5 w-5" />
               <span>Dados do CSV</span>
               <Badge variant="secondary">{validRowCount} linhas válidas</Badge>
+              {sortConfig.column !== null && (
+                <Badge variant="outline" className="text-xs">
+                  Ordenado por: {safeData.headers[sortConfig.column]}
+                  {sortConfig.direction === "desc" ? " ↓" : " ↑"}
+                </Badge>
+              )}
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowPreview(!showPreview)}
-            >
-              {showPreview ? "Ocultar" : "Mostrar"} Preview
-            </Button>
+            <div className="flex items-center space-x-2">
+              {sortConfig.column !== null && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() =>
+                    setSortConfig({ column: null, direction: null })
+                  }
+                  className="text-xs"
+                >
+                  Limpar ordenação
+                </Button>
+              )}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowPreview(!showPreview)}
+              >
+                {showPreview ? "Ocultar" : "Mostrar"} Preview
+              </Button>
+            </div>
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -362,10 +494,26 @@ const ETLConfigStep3 = ({
               <thead className="bg-muted/50 sticky top-0">
                 <tr>
                   <th className="text-left p-2 w-12">Excluir</th>
-                  <th className="text-left p-2 w-12">#</th>
+                  <th className="text-left p-2 w-12">
+                    <button
+                      onClick={() => handleSort("row-number")}
+                      className="flex items-center space-x-1 hover:bg-muted/50 rounded px-1 py-0.5 w-full text-left"
+                      title="Ordenar por número da linha"
+                    >
+                      <span>#</span>
+                      {getSortIcon("row-number")}
+                    </button>
+                  </th>
                   {safeData.headers.slice(0, 6).map((header, idx) => (
-                    <th key={idx} className="text-left p-2 min-w-24 truncate">
-                      {header}
+                    <th key={idx} className="text-left p-2 min-w-24">
+                      <button
+                        onClick={() => handleSort(idx)}
+                        className="flex items-center space-x-1 hover:bg-muted/50 rounded px-1 py-0.5 w-full text-left truncate"
+                        title={`Ordenar por ${header}`}
+                      >
+                        <span className="truncate">{header}</span>
+                        {getSortIcon(idx)}
+                      </button>
                     </th>
                   ))}
                   {safeData.headers.length > 6 && (
@@ -376,40 +524,49 @@ const ETLConfigStep3 = ({
                 </tr>
               </thead>
               <tbody>
-                {safeData.data.slice(0, 20).map((row, rowIndex) => (
-                  <tr
-                    key={rowIndex}
-                    className={`border-t border-border ${
-                      excludedRows.has(rowIndex)
-                        ? "bg-destructive/5 text-muted-foreground"
-                        : "hover:bg-muted/30"
-                    }`}
-                  >
-                    <td className="p-2">
-                      <Checkbox
-                        checked={excludedRows.has(rowIndex)}
-                        onCheckedChange={() => toggleRowExclusion(rowIndex)}
-                      />
-                    </td>
-                    <td className="p-2 text-xs text-muted-foreground">
-                      {rowIndex + 1}
-                    </td>
-                    {row.slice(0, 6).map((cell: string, cellIdx: number) => (
-                      <td
-                        key={cellIdx}
-                        className="p-2 max-w-32 truncate"
-                        title={cell}
+                {sortedDataWithIndices
+                  .slice(0, 20)
+                  .map((item, displayIndex) => {
+                    const { row, originalIndex } = item;
+                    return (
+                      <tr
+                        key={`${originalIndex}-${displayIndex}`}
+                        className={`border-t border-border ${
+                          excludedRows.has(originalIndex)
+                            ? "bg-destructive/5 text-muted-foreground"
+                            : "hover:bg-muted/30"
+                        }`}
                       >
-                        {cell}
-                      </td>
-                    ))}
-                    {row.length > 6 && (
-                      <td className="p-2 text-xs text-muted-foreground">
-                        +{row.length - 6} cols
-                      </td>
-                    )}
-                  </tr>
-                ))}
+                        <td className="p-2">
+                          <Checkbox
+                            checked={excludedRows.has(originalIndex)}
+                            onCheckedChange={() =>
+                              toggleRowExclusion(originalIndex)
+                            }
+                          />
+                        </td>
+                        <td className="p-2 text-xs text-muted-foreground">
+                          {originalIndex + 1}
+                        </td>
+                        {row
+                          .slice(0, 6)
+                          .map((cell: string, cellIdx: number) => (
+                            <td
+                              key={cellIdx}
+                              className="p-2 max-w-32 truncate"
+                              title={cell}
+                            >
+                              {cell}
+                            </td>
+                          ))}
+                        {row.length > 6 && (
+                          <td className="p-2 text-xs text-muted-foreground">
+                            +{row.length - 6} cols
+                          </td>
+                        )}
+                      </tr>
+                    );
+                  })}
               </tbody>
             </table>
           </div>

@@ -6,6 +6,14 @@ import ETLConfigStep2 from "@/components/ETLConfigStep2";
 import ETLConfigStep3 from "@/components/ETLConfigStep3";
 import ETLConfigStep4 from "@/components/ETLConfigStep4";
 import { ETLErrorBoundary } from "@/components/ETLErrorBoundary";
+import {
+  usePersistedState,
+  clearPersistedETLState,
+  hasPersistedETLState,
+} from "@/hooks/usePersistedState";
+import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { RotateCcw } from "lucide-react";
 
 type Step = "select" | "config1" | "config2" | "config3" | "config4";
 
@@ -20,13 +28,60 @@ interface ColumnMapping {
 }
 
 const Index = () => {
-  const [currentStep, setCurrentStep] = useState<Step>("select");
-  const [selectedFile, setSelectedFile] = useState<string>("");
-  const [csvData, setCsvData] = useState<any[]>([]);
-  const [csvHeaders, setCsvHeaders] = useState<string[]>([]);
-  const [sqlSchema, setSqlSchema] = useState<string>("");
-  const [mappings, setMappings] = useState<ColumnMapping[]>([]);
-  const [excludedRows, setExcludedRows] = useState<number[]>([]);
+  const [currentStep, setCurrentStep] = usePersistedState<Step>(
+    "etl-current-step",
+    "select"
+  );
+  const [selectedFile, setSelectedFile] = usePersistedState<string>(
+    "etl-selected-file",
+    ""
+  );
+  const [csvData, setCsvData] = usePersistedState<unknown[]>(
+    "etl-csv-data",
+    []
+  );
+  const [csvHeaders, setCsvHeaders] = usePersistedState<string[]>(
+    "etl-csv-headers",
+    []
+  );
+  const [sqlSchema, setSqlSchema] = usePersistedState<string>(
+    "etl-sql-schema",
+    ""
+  );
+  const [mappings, setMappings] = usePersistedState<ColumnMapping[]>(
+    "etl-mappings",
+    []
+  );
+  const [excludedRows, setExcludedRows] = usePersistedState<number[]>(
+    "etl-excluded-rows",
+    []
+  );
+
+  // Verificar se há estado persistido e mostrar alerta
+  const [showRestoreAlert, setShowRestoreAlert] = useState(
+    hasPersistedETLState()
+  );
+
+  const handleRestoreSession = () => {
+    setShowRestoreAlert(false);
+    console.log("📁 Sessão anterior restaurada:", {
+      currentStep,
+      selectedFile,
+    });
+  };
+
+  const handleStartNew = () => {
+    clearPersistedETLState();
+    setCurrentStep("select");
+    setSelectedFile("");
+    setCsvData([]);
+    setCsvHeaders([]);
+    setSqlSchema("");
+    setMappings([]);
+    setExcludedRows([]);
+    setShowRestoreAlert(false);
+    console.log("🆕 Nova sessão iniciada");
+  };
 
   const handleFileSelect = (fileId: string) => {
     setSelectedFile(fileId);
@@ -34,7 +89,7 @@ const Index = () => {
   };
 
   const handleStep1Complete = (
-    data: any[],
+    data: unknown[],
     headers: string[],
     schema: string
   ) => {
@@ -92,6 +147,38 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header />
+
+      {/* Alerta de restauração de sessão */}
+      {showRestoreAlert && (
+        <div className="container mx-auto px-6 pt-4">
+          <Alert>
+            <RotateCcw className="h-4 w-4" />
+            <AlertDescription>
+              <div className="flex items-center justify-between">
+                <span>
+                  <strong>Sessão anterior encontrada!</strong> Você estava no{" "}
+                  {currentStep === "config1"
+                    ? "Step 1"
+                    : currentStep === "config2"
+                    ? "Step 2"
+                    : currentStep === "config3"
+                    ? "Step 3"
+                    : "Step 4"}
+                  {selectedFile && ` com arquivo "${selectedFile}"`}.
+                </span>
+                <div className="flex space-x-2 ml-4">
+                  <Button size="sm" onClick={handleRestoreSession}>
+                    Continuar
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={handleStartNew}>
+                    Novo
+                  </Button>
+                </div>
+              </div>
+            </AlertDescription>
+          </Alert>
+        </div>
+      )}
 
       <ETLErrorBoundary>
         <main className="container mx-auto px-6 py-8">
