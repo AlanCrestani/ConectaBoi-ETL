@@ -5,6 +5,7 @@ import ETLConfigStep1 from "@/components/ETLConfigStep1";
 import ETLConfigStep2 from "@/components/ETLConfigStep2";
 import ETLConfigStep3 from "@/components/ETLConfigStep3";
 import ETLConfigStep4 from "@/components/ETLConfigStep4";
+import { ConfigManager } from "@/components/ConfigManager";
 import { ETLErrorBoundary } from "@/components/ETLErrorBoundary";
 import {
   usePersistedState,
@@ -13,7 +14,7 @@ import {
 } from "@/hooks/usePersistedState";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { RotateCcw } from "lucide-react";
+import { RotateCcw, Settings } from "lucide-react";
 
 type Step = "select" | "config1" | "config2" | "config3" | "config4";
 
@@ -61,6 +62,9 @@ const Index = () => {
   const [showRestoreAlert, setShowRestoreAlert] = useState(
     hasPersistedETLState()
   );
+
+  // Estado para controlar a exibição do gerenciador de configurações
+  const [showConfigManager, setShowConfigManager] = useState(false);
 
   const handleRestoreSession = () => {
     setShowRestoreAlert(false);

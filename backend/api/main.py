@@ -607,6 +607,124 @@ async def get_table_schema(table_name: str):
         logger.error(f"Erro ao obter schema da tabela {table_name}: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+class SaveScriptRequest(BaseModel):
+    """Modelo para salvar script Python"""
+    script_name: str
+    script_content: str
+    config_data: Dict[str, Any]
+    description: Optional[str] = None
+
+@app.post("/scripts/save")
+async def save_python_script(request: SaveScriptRequest):
+    """
+    Salva um script Python gerado na pasta generated_scripts
+    """
+    try:
+        # Criar diretório se não existir
+        scripts_dir = Path("../../generated_scripts")
+        scripts_dir.mkdir(exist_ok=True)
+        
+        # Salvar script Python
+        script_path = scripts_dir / f"{request.script_name}.py"
+        with open(script_path, 'w', encoding='utf-8') as f:
+            f.write(request.script_content)
+        
+        # Salvar configuração JSON
+        config_path = scripts_dir / f"{request.script_name}_config.json"
+        config_data = {
+            "script_name": request.script_name,
+            "created_at": datetime.now().isoformat(),
+            "description": request.description,
+            "config": request.config_data
+        }
+        with open(config_path, 'w', encoding='utf-8') as f:
+            json.dump(config_data, f, indent=2, ensure_ascii=False)
+        
+        # Criar script executável
+        exec_script_content = f'''#!/usr/bin/env python3
+"""
+Script executável para {request.script_name}
+Gerado automaticamente pelo ConectaBoi ETL
+"""
+
+import sys
+import os
+from pathlib import Path
+
+# Adicionar diretório backend ao path
+backend_dir = Path(__file__).parent.parent / "backend"
+sys.path.append(str(backend_dir))
+
+# Executar o script principal
+if __name__ == "__main__":
+    exec(open(r"{script_path.absolute()}").read())
+'''
+        
+        exec_path = scripts_dir / f"run_{request.script_name}.py"
+        with open(exec_path, 'w', encoding='utf-8') as f:
+            f.write(exec_script_content)
+        
+        logger.info(f"Script salvo: {script_path}")
+        
+        return {
+            "status": "success",
+            "message": f"Script {request.script_name} salvo com sucesso",
+            "paths": {
+                "script": str(script_path.absolute()),
+                "config": str(config_path.absolute()),
+                "executable": str(exec_path.absolute())
+            }
+        }
+        
+    except Exception as e:
+        logger.error(f"Erro ao salvar script: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/scripts/list")
+async def list_saved_scripts():
+    """
+    Lista todos os scripts salvos na pasta generated_scripts
+    """
+    try:
+        scripts_dir = Path("../../generated_scripts")
+        if not scripts_dir.exists():
+            return {"scripts": []}
+        
+        scripts = []
+        for config_file in scripts_dir.glob("*_config.json"):
+            try:
+                with open(config_file, 'r', encoding='utf-8') as f:
+                    config_data = json.load(f)
+                    
+                script_name = config_data.get("script_name", config_file.stem.replace("_config", ""))
+                script_path = scripts_dir / f"{script_name}.py"
+                exec_path = scripts_dir / f"run_{script_name}.py"
+                
+                scripts.append({
+                    "name": script_name,
+                    "description": config_data.get("description", ""),
+                    "created_at": config_data.get("created_at", ""),
+                    "exists": {
+                        "script": script_path.exists(),
+                        "config": config_file.exists(),
+                        "executable": exec_path.exists()
+                    },
+                    "paths": {
+                        "script": str(script_path.absolute()),
+                        "config": str(config_file.absolute()),
+                        "executable": str(exec_path.absolute())
+                    }
+                })
+            except Exception as e:
+                logger.error(f"Erro ao ler config {config_file}: {e}")
+                continue
+        
+        return {"scripts": scripts}
+        
+    except Exception as e:
+        logger.error(f"Erro ao listar scripts: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

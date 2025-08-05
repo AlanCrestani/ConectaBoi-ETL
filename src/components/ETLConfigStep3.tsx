@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   ArrowRight,
   ArrowLeft,
@@ -14,10 +15,17 @@ import {
   ChevronUp,
   ChevronDown,
   ChevronsUpDown,
+  Zap,
+  Settings,
+  FileText,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useSafeCSVData } from "@/hooks/useSafeCSVData";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { ConfigManager } from "@/components/ConfigManager";
+import { QuickETL } from "@/components/QuickETL";
+import { SavedScripts } from "@/components/SavedScripts";
+import { useConfigPersistence } from "@/hooks/useConfigPersistence";
 
 interface ColumnMapping {
   csvColumn: string;
@@ -31,7 +39,7 @@ interface ColumnMapping {
 
 interface ETLConfigStep3Props {
   fileId: string;
-  csvData: any[];
+  csvData: Record<string, unknown>[];
   csvHeaders: string[];
   mappings: ColumnMapping[];
   onNext: (excludedRows: number[]) => void;
@@ -52,7 +60,16 @@ const ETLConfigStep3 = ({
     column: number | "row-number" | null;
     direction: "asc" | "desc" | null;
   }>({ column: null, direction: null });
+  const [selectedConfig, setSelectedConfig] = useState<{
+    transformations: Record<string, string>;
+    removedColumns: string[];
+    fileId: string;
+    originalFileName: string;
+    previewData: Record<string, unknown>[];
+    columns: string[];
+  } | null>(null);
   const { toast } = useToast();
+  const { loadConfig } = useConfigPersistence();
 
   // Usar validação defensiva dos dados CSV
   const safeData = useSafeCSVData(csvHeaders, csvData);
@@ -422,8 +439,46 @@ const ETLConfigStep3 = ({
     return validation;
   };
 
+  // Função para carregar configuração
+  const handleLoadConfig = (config: {
+    transformations: Record<string, string>;
+    removedColumns: string[];
+    fileId: string;
+    originalFileName: string;
+    previewData: Record<string, unknown>[];
+    columns: string[];
+  }) => {
+    setSelectedConfig(config);
+    toast({
+      title: "Configuração Carregada",
+      description: "A configuração foi carregada com sucesso para o Quick ETL.",
+    });
+  };
+
   const previewData = generatePreviewRow();
   const validRowCount = safeData.data.length - excludedRows.size;
+
+  // Configuração atual para salvar
+  const currentConfig = {
+    transformations: mappings.reduce((acc, mapping) => {
+      if (mapping.transformations) {
+        Object.assign(acc, mapping.transformations);
+      }
+      return acc;
+    }, {} as Record<string, string>),
+    removedColumns: csvHeaders.filter(header => 
+      !mappings.some(mapping => mapping.csvColumn === header)
+    ),
+    fileId,
+    originalFileName: fileId,
+    previewData: safeData.data.slice(0, 10).map(row => 
+      row.reduce((acc, value, index) => {
+        acc[csvHeaders[index] || `column_${index}`] = value;
+        return acc;
+      }, {} as Record<string, unknown>)
+    ),
+    columns: csvHeaders
+  };
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
@@ -450,8 +505,30 @@ const ETLConfigStep3 = ({
         </Alert>
       )}
 
-      {/* Data Preview Table */}
-      <Card>
+      {/* Tabs para Preview/Validação e Quick ETL */}
+      <Tabs defaultValue="preview" className="w-full">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="preview" className="flex items-center">
+            <Eye className="h-4 w-4 mr-2" />
+            Preview & Validação
+          </TabsTrigger>
+          <TabsTrigger value="quick-etl" className="flex items-center">
+            <Zap className="h-4 w-4 mr-2" />
+            Quick ETL
+          </TabsTrigger>
+          <TabsTrigger value="configs" className="flex items-center">
+            <Settings className="h-4 w-4 mr-2" />
+            Configurações
+          </TabsTrigger>
+          <TabsTrigger value="scripts" className="flex items-center">
+            <FileText className="h-4 w-4 mr-2" />
+            Scripts
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="preview" className="space-y-6">
+          {/* Data Preview Table */}
+          <Card>
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
@@ -682,6 +759,23 @@ const ETLConfigStep3 = ({
           </Button>
         </div>
       </div>
+        </TabsContent>
+
+        <TabsContent value="quick-etl" className="space-y-6">
+          <QuickETL savedConfig={selectedConfig} />
+        </TabsContent>
+
+        <TabsContent value="configs" className="space-y-6">
+          <ConfigManager 
+            currentConfig={currentConfig}
+            onLoadConfig={handleLoadConfig}
+          />
+        </TabsContent>
+
+        <TabsContent value="scripts" className="space-y-6">
+          <SavedScripts />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
