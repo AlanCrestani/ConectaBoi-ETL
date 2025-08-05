@@ -153,7 +153,10 @@ const Index = () => {
     // Define valores mínimos necessários para evitar erros
     setSelectedFile("configuracao_salva");
     setCsvHeaders(["placeholder"]);
-    setCsvData([{ placeholder: "dados_de_configuracao_salva" }] as Record<string, unknown>[]);
+    setCsvData([{ placeholder: "dados_de_configuracao_salva" }] as Record<
+      string,
+      unknown
+    >[]);
     setSqlSchema("-- Schema será carregado da configuração salva");
     setMappings([]);
     setCurrentStep("config3");
@@ -198,8 +201,8 @@ const Index = () => {
       <ETLErrorBoundary>
         <main className="container mx-auto px-6 py-8">
           {currentStep === "select" && (
-            <FileSelector 
-              onFileSelect={handleFileSelect} 
+            <FileSelector
+              onFileSelect={handleFileSelect}
               onGoToConfigs={handleGoToConfigs}
             />
           )}

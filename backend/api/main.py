@@ -12,6 +12,8 @@ import sys
 import os
 import logging
 import json
+import pandas as pd
+import re
 from pathlib import Path
 from datetime import datetime
 
@@ -20,6 +22,78 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 from etl.conectaboi_etl_smart import ConectaBoiETL
 from config.settings import get_settings
+
+def _convert_brazilian_numeric_format(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Converte formatos brasileiros (vírgula nos números e dd/mm/yyyy nas datas) 
+    para formato americano/ISO para compatibilidade com PostgreSQL/Supabase
+    """
+    df_copy = df.copy()
+    
+    # Padrão para identificar números brasileiros: -123,45 ou 123,45
+    brazilian_number_pattern = r'^-?\d+,\d+$'
+    
+    # Padrão para identificar datas brasileiras: dd/mm/yyyy
+    brazilian_date_pattern = r'^\d{1,2}/\d{1,2}/\d{4}$'
+    
+    for column in df_copy.columns:
+        # Converter apenas colunas que parecem ter números com vírgula
+        sample_values = df_copy[column].dropna().astype(str).head(100)
+        
+        # Verificar se há valores que parecem números brasileiros
+        has_brazilian_numbers = any(
+            re.match(brazilian_number_pattern, str(val).strip()) 
+            for val in sample_values 
+            if str(val).strip()
+        )
+        
+        # Verificar se há valores que parecem datas brasileiras
+        has_brazilian_dates = any(
+            re.match(brazilian_date_pattern, str(val).strip()) 
+            for val in sample_values 
+            if str(val).strip()
+        )
+        
+        if has_brazilian_numbers:
+            logger.info(f"🔄 Convertendo formato numérico brasileiro na coluna '{column}': vírgula → ponto")
+            
+            def convert_number(x):
+                if pd.isna(x):
+                    return None
+                str_x = str(x).strip()
+                if re.match(brazilian_number_pattern, str_x):
+                    # Converter vírgula para ponto
+                    converted = str_x.replace(',', '.')
+                    try:
+                        # Tentar converter para float para validar
+                        float(converted)
+                        return converted
+                    except ValueError:
+                        return str_x  # Retorna original se conversão falhar
+                return x
+            
+            df_copy[column] = df_copy[column].apply(convert_number)
+            
+        elif has_brazilian_dates:
+            logger.info(f"📅 Convertendo formato de data brasileiro na coluna '{column}': dd/mm/yyyy → yyyy-mm-dd")
+            
+            def convert_date(x):
+                if pd.isna(x):
+                    return None
+                str_x = str(x).strip()
+                if re.match(brazilian_date_pattern, str_x):
+                    try:
+                        # Converter dd/mm/yyyy para yyyy-mm-dd
+                        day, month, year = str_x.split('/')
+                        iso_date = f"{year}-{month.zfill(2)}-{day.zfill(2)}"
+                        return iso_date
+                    except ValueError:
+                        return str_x  # Retorna original se conversão falhar
+                return x
+            
+            df_copy[column] = df_copy[column].apply(convert_date)
+    
+    return df_copy
 
 # Modelos Pydantic
 class ProcessStep1Request(BaseModel):
@@ -614,6 +688,7 @@ class ETLProcessRequest(BaseModel):
     excluded_columns: list[str]
     excluded_rows: list[int] = []
     mappings: list[dict[str, Any]] = []
+    skip_first_line: bool = False  # Adicionar campo para controlar se deve pular primeira linha
 
 class SupabaseUploadRequest(BaseModel):
     """Modelo para upload direto ao Supabase"""
@@ -636,8 +711,8 @@ async def process_etl_simple(request: ETLProcessRequest):
         
         etl = get_etl_instance()
         
-        # Carregar dados
-        df = etl._load_and_prepare_dataframe(str(file_path), skip_first_line=True)
+        # Carregar dados usando o valor de skip_first_line da requisição
+        df = etl._load_and_prepare_dataframe(str(file_path), skip_first_line=request.skip_first_line)
         
         # Se temos mappings, usar a lógica completa do ETL
         if request.mappings and len(request.mappings) > 0:
@@ -705,6 +780,9 @@ async def process_etl_simple(request: ETLProcessRequest):
         if request.excluded_rows:
             df_result = df_result.drop(index=request.excluded_rows, errors='ignore')
         
+        # Converter formatos brasileiros (vírgula → ponto, dd/mm/yyyy → yyyy-mm-dd) antes de enviar para Supabase
+        df_result = _convert_brazilian_numeric_format(df_result)
+        
         # Converter para lista de dicionários
         data = df_result.to_dict('records')
         
@@ -762,8 +840,14 @@ async def upload_to_supabase(request: SupabaseUploadRequest):
         }
         
     except Exception as e:
-        logger.error(f"Erro no upload para Supabase: {e}")
-        raise HTTPException(status_code=500, detail=f"Erro no upload: {str(e)}")
+        logger.error(f"Erro no upload para Supabase: {e}", exc_info=True)
+        
+        # Tenta extrair uma mensagem mais detalhada do erro, se disponível
+        error_detail = str(e)
+        if hasattr(e, 'message'):
+            error_detail = e.message
+
+        raise HTTPException(status_code=500, detail=f"Erro detalhado no upload para Supabase: {error_detail}")
 
 class SaveScriptRequest(BaseModel):
     """Modelo para salvar script Python"""

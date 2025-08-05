@@ -122,6 +122,7 @@ export function QuickETL({ savedConfig }: QuickETLProps) {
         excluded_columns: savedConfig.removedColumns || [],
         excluded_rows: [],
         mappings: savedConfig.mappings || [], // Adiciona os mappings com fallback
+        skip_first_line: false, // Não pular primeira linha por padrão
       };
 
       console.log("🔍 Debug ETL Config:", etlConfig);

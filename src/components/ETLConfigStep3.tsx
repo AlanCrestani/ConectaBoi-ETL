@@ -500,9 +500,10 @@ const ETLConfigStep3 = ({
         <Alert className="border-blue-200 bg-blue-50">
           <Settings className="h-4 w-4" />
           <AlertDescription>
-            <strong>🔧 Modo Configurações Salvas</strong> - Você pulou direto para esta tela. 
-            Use a aba "Configurações Salvas" para carregar uma configuração existente, 
-            ou a aba "Quick ETL" para processar novos arquivos rapidamente.
+            <strong>🔧 Modo Configurações Salvas</strong> - Você pulou direto
+            para esta tela. Use a aba "Configurações Salvas" para carregar uma
+            configuração existente, ou a aba "Quick ETL" para processar novos
+            arquivos rapidamente.
           </AlertDescription>
         </Alert>
       )}

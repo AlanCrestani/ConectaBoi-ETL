@@ -26,7 +26,7 @@ interface ETLConfigStep1Props {
 
 const ETLConfigStep1 = ({ fileId, onNext }: ETLConfigStep1Props) => {
   // CSV related state
-  const [csvData, setCsvData] = useState<any[]>([]);
+  const [csvData, setCsvData] = useState<Record<string, unknown>[]>([]);
   const [headers, setHeaders] = useState<string[]>([]);
   const [csvUploaded, setCsvUploaded] = useState(false);
   const [skipFirstLine, setSkipFirstLine] = useState(false);
