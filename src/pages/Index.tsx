@@ -37,7 +37,7 @@ const Index = () => {
     "etl-selected-file",
     ""
   );
-  const [csvData, setCsvData] = usePersistedState<unknown[]>(
+  const [csvData, setCsvData] = usePersistedState<Record<string, unknown>[]>(
     "etl-csv-data",
     []
   );
@@ -97,7 +97,7 @@ const Index = () => {
     headers: string[],
     schema: string
   ) => {
-    setCsvData(data);
+    setCsvData(data as Record<string, unknown>[]);
     setCsvHeaders(headers);
     setSqlSchema(schema);
     setCurrentStep("config2");
@@ -148,6 +148,17 @@ const Index = () => {
     }
   };
 
+  const handleGoToConfigs = () => {
+    // Ir direto para a tela 3 (Preview e Validação)
+    // Define valores mínimos necessários para evitar erros
+    setSelectedFile("configuracao_salva");
+    setCsvHeaders(["placeholder"]);
+    setCsvData([{ placeholder: "dados_de_configuracao_salva" }] as Record<string, unknown>[]);
+    setSqlSchema("-- Schema será carregado da configuração salva");
+    setMappings([]);
+    setCurrentStep("config3");
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -187,7 +198,10 @@ const Index = () => {
       <ETLErrorBoundary>
         <main className="container mx-auto px-6 py-8">
           {currentStep === "select" && (
-            <FileSelector onFileSelect={handleFileSelect} />
+            <FileSelector 
+              onFileSelect={handleFileSelect} 
+              onGoToConfigs={handleGoToConfigs}
+            />
           )}
 
           {currentStep === "config1" && (

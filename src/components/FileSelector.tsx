@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { Upload, FileText, CheckCircle } from "lucide-react";
+import { Upload, FileText, CheckCircle, Settings } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { useConfigPersistence } from "@/hooks/useConfigPersistence";
 
 interface FileOption {
   id: string;
@@ -10,7 +11,14 @@ interface FileOption {
   status: 'pending' | 'configured' | 'processing';
 }
 
-const FileSelector = ({ onFileSelect }: { onFileSelect: (fileId: string) => void }) => {
+const FileSelector = ({ 
+  onFileSelect, 
+  onGoToConfigs 
+}: { 
+  onFileSelect: (fileId: string) => void;
+  onGoToConfigs?: () => void;
+}) => {
+  const { savedConfigs } = useConfigPersistence();
   const [files] = useState<FileOption[]>([
     {
       id: "01_historico_consumo",
@@ -95,6 +103,41 @@ const FileSelector = ({ onFileSelect }: { onFileSelect: (fileId: string) => void
           </Card>
         ))}
       </div>
+
+      {/* Botão para ir direto às configurações salvas */}
+      {savedConfigs.length > 0 && (
+        <div className="max-w-3xl mx-auto mt-8">
+          <div className="text-center">
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-border" />
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="bg-background px-4 text-muted-foreground">ou</span>
+              </div>
+            </div>
+          </div>
+          
+          <Card className="mt-6 border-dashed border-2 border-primary/20 bg-primary/5">
+            <CardContent className="p-6 text-center">
+              <Settings className="h-8 w-8 text-primary mx-auto mb-3" />
+              <h3 className="font-semibold text-foreground mb-2">
+                Usar Configurações Salvas
+              </h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                Você tem {savedConfigs.length} configuração(ões) salva(s). 
+                Pule direto para a tela de configurações.
+              </p>
+              {onGoToConfigs && (
+                <Button onClick={onGoToConfigs} className="gap-2">
+                  <Settings className="h-4 w-4" />
+                  Ir para Configurações Salvas
+                </Button>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 };
